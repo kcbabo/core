@@ -29,6 +29,8 @@ import java.util.Set;
 
 public class JavaService extends BaseService {
     
+    public static final String TYPE = "java";
+    
     private Class<?> _serviceInterface;
 
     private JavaService(Set<ServiceOperation> operations, Class<?> serviceInterface) {
@@ -49,14 +51,16 @@ public class JavaService extends BaseService {
                             "Service operations on a Java interface must have exactly one parameter!");
                 }
                 // Create the appropriate service operation and add it to the list
-                String inputName = serviceInterface.getCanonicalName() + 
-                    m.getName() + params[0].getCanonicalName();
+                String inputName = formatName(new String[] {
+                        serviceInterface.getCanonicalName(), 
+                        m.getName(), params[0].getCanonicalName()});
                 if (m.getReturnType().equals(Void.TYPE)) {
                     ops.add(new InOnlyOperation(m.getName(), inputName));
                 }
                 else {
-                    String outputName = serviceInterface.getCanonicalName() +
-                        m.getName() + m.getReturnType().getCanonicalName();
+                    String outputName = formatName(new String[] {
+                            serviceInterface.getCanonicalName(), 
+                            m.getName(), m.getReturnType().getCanonicalName()});
                     ops.add(new InOutOperation(m.getName(), inputName, outputName));
                 }
             }
@@ -67,5 +71,13 @@ public class JavaService extends BaseService {
     
     public Class<?> getJavaInterface() {
         return _serviceInterface;
+    }
+    
+    private static String formatName(String[] parts) {
+        StringBuilder formattedName = new StringBuilder();
+        for (String p : parts) {
+            formattedName.append("/" + p);
+        }
+        return formattedName.insert(0, TYPE + ":").toString();
     }
 }
