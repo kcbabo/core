@@ -33,7 +33,7 @@ import org.switchyard.ServiceDomain;
 import org.switchyard.internal.handlers.AddressingHandler;
 import org.switchyard.internal.handlers.DeliveryHandler;
 import org.switchyard.internal.handlers.TransformHandler;
-import org.switchyard.metadata.InOnlyService;
+import org.switchyard.metadata.InOutService;
 import org.switchyard.metadata.ServiceInterface;
 import org.switchyard.spi.Endpoint;
 import org.switchyard.spi.EndpointProvider;
@@ -113,12 +113,12 @@ public class DomainImpl implements ServiceDomain {
         HandlerChain handlers = new DefaultHandlerChain();
         handlers.addLast("provider", handler);
         Endpoint ep = _endpointProvider.createEndpoint(handlers);
-        // If no service interface is provided, we default to InOnlyService
+        // If no service interface is provided, we default to InOutService
         if (metadata != null) {
             return _registry.registerService(serviceName, metadata, ep, handlers, this);
         }
         else {
-            return _registry.registerService(serviceName, new InOnlyService(), ep, handlers, this);
+            return _registry.registerService(serviceName, new InOutService(), ep, handlers, this);
         }
     }
 
