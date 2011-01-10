@@ -33,6 +33,8 @@ import org.switchyard.ServiceDomain;
 import org.switchyard.internal.handlers.AddressingHandler;
 import org.switchyard.internal.handlers.DeliveryHandler;
 import org.switchyard.internal.handlers.TransformHandler;
+import org.switchyard.metadata.InOnlyService;
+import org.switchyard.metadata.ServiceInterface;
 import org.switchyard.spi.Endpoint;
 import org.switchyard.spi.EndpointProvider;
 import org.switchyard.spi.ServiceRegistry;
@@ -102,10 +104,22 @@ public class DomainImpl implements ServiceDomain {
 
     @Override
     public Service registerService(QName serviceName, ExchangeHandler handler) {
+        return registerService(serviceName, handler, null);
+    }
+    
+    @Override
+    public Service registerService(QName serviceName, ExchangeHandler handler,
+            ServiceInterface metadata) {
         HandlerChain handlers = new DefaultHandlerChain();
         handlers.addLast("provider", handler);
         Endpoint ep = _endpointProvider.createEndpoint(handlers);
-        return _registry.registerService(serviceName, ep, handlers, this);
+        // If no service interface is provided, we default to InOnlyService
+        if (metadata != null) {
+            return _registry.registerService(serviceName, metadata, ep, handlers, this);
+        }
+        else {
+            return _registry.registerService(serviceName, new InOnlyService(), ep, handlers, this);
+        }
     }
 
 
@@ -118,4 +132,5 @@ public class DomainImpl implements ServiceDomain {
     public TransformerRegistry getTransformerRegistry() {
         return _transformerRegistry;
     }
+
 }

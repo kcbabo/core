@@ -20,33 +20,47 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.switchyard;
+package org.switchyard.metadata;
 
-import javax.xml.namespace.QName;
+import org.switchyard.ExchangePattern;
 
-import org.switchyard.metadata.ServiceInterface;
-
-/**
- * A service registered with the SwitchYard runtime.  Service instances are only
- * used by code that registers a service and have no real relevance to code
- * which consumes the service.
- */
-public interface Service {
-    /**
-     * Qualified name of the service.
-     * @return service name
-     */
-    QName getName();
-    /**
-     * Used to notify the SwitchYard runtime that the service should be
-     * removed from the runtime registry and no further exchanges should be
-     * routed to the registered ExchangeHandler.
-     */
-    void unregister();
+public class InOutOperation implements ServiceOperation {
     
-    /**
-     * Interface metadata for the registered service.
-     * @return the service interface
-     */
-    ServiceInterface getInterface();
+    public static final String INPUT_MESSAGE = "in";
+    public static final String OUTPUT_MESSAGE = "out";
+
+    private String _methodName;
+    private String _inputName;
+    private String _outputName;
+
+
+    public InOutOperation(String methodName) {
+        this(methodName, INPUT_MESSAGE, OUTPUT_MESSAGE);
+    }
+    
+    public InOutOperation(String methodName, String inputName, String outputName) {
+        _methodName = methodName;
+        _inputName = inputName;
+        _outputName = outputName;
+    }
+
+    @Override
+    public ExchangePattern getExchangePattern() {
+        return ExchangePattern.IN_OUT;
+    }
+
+    @Override
+    public String getInputMessage() {
+        return _inputName;
+    }
+
+    @Override
+    public String getName() {
+        return _methodName; 
+    }
+
+    @Override
+    public String getOutputMessage() {
+        return _outputName;
+    }
 }

@@ -20,33 +20,40 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.switchyard;
+package org.switchyard.metadata;
 
-import javax.xml.namespace.QName;
+import java.util.HashSet;
+import java.util.Set;
 
-import org.switchyard.metadata.ServiceInterface;
-
-/**
- * A service registered with the SwitchYard runtime.  Service instances are only
- * used by code that registers a service and have no real relevance to code
- * which consumes the service.
- */
-public interface Service {
-    /**
-     * Qualified name of the service.
-     * @return service name
-     */
-    QName getName();
-    /**
-     * Used to notify the SwitchYard runtime that the service should be
-     * removed from the runtime registry and no further exchanges should be
-     * routed to the registered ExchangeHandler.
-     */
-    void unregister();
+public class BaseService implements ServiceInterface {
     
-    /**
-     * Interface metadata for the registered service.
-     * @return the service interface
-     */
-    ServiceInterface getInterface();
+    public static final String DEFAULT_OPERATION = "process";
+    
+    private Set<ServiceOperation> _operations;
+    
+    public BaseService(ServiceOperation operation) {
+        _operations = new HashSet<ServiceOperation>(1);
+        _operations.add(operation);
+    }
+    
+    public BaseService(Set<ServiceOperation> operations) {
+        _operations = operations;
+    }
+    
+    @Override
+    public ServiceOperation getOperation(String name) {
+        ServiceOperation operation = null;
+        for (ServiceOperation op : _operations) {
+            if (op.getName().equals(name)) {
+                operation = op;
+                break;
+            }
+        }
+        return operation;
+    }
+
+    @Override
+    public Set<ServiceOperation> getOperations() {
+        return new HashSet<ServiceOperation>(_operations);
+    }
 }

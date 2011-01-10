@@ -20,33 +20,44 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.switchyard;
+package org.switchyard.metadata;
 
-import javax.xml.namespace.QName;
+import org.switchyard.ExchangePattern;
 
-import org.switchyard.metadata.ServiceInterface;
-
-/**
- * A service registered with the SwitchYard runtime.  Service instances are only
- * used by code that registers a service and have no real relevance to code
- * which consumes the service.
- */
-public interface Service {
-    /**
-     * Qualified name of the service.
-     * @return service name
-     */
-    QName getName();
-    /**
-     * Used to notify the SwitchYard runtime that the service should be
-     * removed from the runtime registry and no further exchanges should be
-     * routed to the registered ExchangeHandler.
-     */
-    void unregister();
+public class InOnlyOperation implements ServiceOperation {
     
-    /**
-     * Interface metadata for the registered service.
-     * @return the service interface
-     */
-    ServiceInterface getInterface();
+    public static final String INPUT_MESSAGE = "in";
+    
+    private String _methodName;
+    private String _inputName;
+    
+    public InOnlyOperation(String methodName) {
+        this(methodName, INPUT_MESSAGE);
+    }
+    
+    public InOnlyOperation(String methodName, String inputName) {
+        _methodName = methodName;
+        _inputName = inputName;
+    }
+
+    @Override
+    public ExchangePattern getExchangePattern() {
+        return ExchangePattern.IN_ONLY;
+    }
+
+    @Override
+    public String getInputMessage() {
+        return _inputName;
+    }
+
+    @Override
+    public String getName() {
+        return _methodName; 
+    }
+
+    @Override
+    public String getOutputMessage() {
+        return null;
+    }
+
 }
