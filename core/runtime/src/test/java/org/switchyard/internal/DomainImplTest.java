@@ -29,8 +29,9 @@ import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.switchyard.Exchange;
-import org.switchyard.ExchangePattern;
-import org.switchyard.internal.DomainImpl;
+import org.switchyard.MockHandler;
+import org.switchyard.Service;
+import org.switchyard.metadata.ServiceInterface;
 
 /**
  *  Unit tests for the DomainImpl class.
@@ -38,19 +39,22 @@ import org.switchyard.internal.DomainImpl;
 public class DomainImplTest {
      
     private static final QName SERVICE = new QName("Service");
+    private Service _service;
     private DomainImpl _domain;
     
     @Before
     public void setUp() throws Exception {
-        _domain = new DomainImpl("test", null, null, null);
+        _domain = new DomainImpl("test", 
+                new DefaultServiceRegistry(), 
+                new DefaultEndpointProvider(), 
+                null);
+        _service = _domain.registerService(SERVICE, new MockHandler());
     }
     
     @Test
     public void testCreateExchange() {
-        Exchange inOnly = _domain.createExchange(SERVICE, ExchangePattern.IN_ONLY);
-        Assert.assertEquals(ExchangePattern.IN_ONLY, inOnly.getPattern());
-        Exchange inOut = _domain.createExchange(SERVICE, ExchangePattern.IN_OUT);
-        Assert.assertEquals(ExchangePattern.IN_OUT, inOut.getPattern());
+        Exchange exchange = _domain.createExchange(_service, ServiceInterface.DEFAULT_OPERATION);
+        Assert.assertEquals(exchange.getService(), _service);
     }
     
     

@@ -24,6 +24,9 @@ package org.switchyard.internal;
 
 import javax.xml.namespace.QName;
 
+import org.switchyard.Exchange;
+import org.switchyard.ExchangeHandler;
+import org.switchyard.ExchangePattern;
 import org.switchyard.HandlerChain;
 import org.switchyard.Service;
 import org.switchyard.ServiceDomain;

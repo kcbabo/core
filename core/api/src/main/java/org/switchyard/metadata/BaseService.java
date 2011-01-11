@@ -27,8 +27,6 @@ import java.util.Set;
 
 public class BaseService implements ServiceInterface {
     
-    public static final String DEFAULT_OPERATION = "process";
-    
     private Set<ServiceOperation> _operations;
     
     public BaseService(ServiceOperation operation) {

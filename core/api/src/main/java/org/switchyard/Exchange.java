@@ -75,7 +75,7 @@ public interface Exchange {
      * more concrete endpoints when the exchange is sent.
      * @return the qualified name of the service to be invoked
      */
-    QName getService();
+    Service getService();
 
     /**
      * Returns the current message for the exchange.  On new exchanges, this

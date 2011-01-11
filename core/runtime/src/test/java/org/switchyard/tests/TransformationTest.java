@@ -39,9 +39,11 @@ import org.switchyard.Message;
 import org.switchyard.MessageBuilder;
 import org.switchyard.MockHandler;
 import org.switchyard.Scope;
+import org.switchyard.Service;
 import org.switchyard.ServiceDomain;
 import org.switchyard.internal.ServiceDomains;
 import org.switchyard.internal.transform.BaseTransformer;
+import org.switchyard.metadata.ServiceInterface;
 import org.switchyard.transform.Transformer;
 
 /**
@@ -86,11 +88,11 @@ public class TransformationTest {
 
         // Provide the service
         MockHandler provider = new MockHandler();
-        _domain.registerService(serviceName, provider);
+        Service service = _domain.registerService(serviceName, provider);
         
         // Create the exchange, add the transformer, and invoke the service
         Exchange exchange = _domain.createExchange(
-                serviceName, ExchangePattern.IN_ONLY);
+                service, ServiceInterface.DEFAULT_OPERATION);
         Context msgCtx = exchange.createContext();
         msgCtx.setProperty(Transformer.class.getName(), dateToString);
         
@@ -128,11 +130,11 @@ public class TransformationTest {
 
         // Provide the service
         MockHandler provider = new MockHandler();
-        _domain.registerService(serviceName, provider);
+        Service service = _domain.registerService(serviceName, provider);
         
         // Create the exchange, add the transformer, and invoke the service
         Exchange exchange = _domain.createExchange(
-                serviceName, ExchangePattern.IN_ONLY);
+                service, ServiceInterface.DEFAULT_OPERATION);
         exchange.getContext().setProperty(Transformer.class.getName(), dateToString);
         
         Message msg = MessageBuilder.newInstance().buildMessage();
@@ -152,9 +154,15 @@ public class TransformationTest {
     public void testTransformationByName() throws Exception {
         final QName serviceName = new QName("nameTransform");
         final String fromName = "fromA";
-        final String toName = "toB";
         final String input = "Hello";
         final String output = "Hello SwitchYard";
+        
+        // Provide the service
+        MockHandler provider = new MockHandler();
+        Service service = _domain.registerService(serviceName, provider);
+        
+        final String toName = service.getInterface().getOperation(
+                ServiceInterface.DEFAULT_OPERATION).getInputMessage();
         
         // Define the transformation and register it
         Transformer<String, String> helloTransform = 
@@ -166,20 +174,13 @@ public class TransformationTest {
         };
         _domain.getTransformerRegistry().addTransformer(helloTransform);
         
-        // Provide the service
-        MockHandler provider = new MockHandler();
-        _domain.registerService(serviceName, provider);
-        
         // Create the exchange and invoke the service
         Exchange exchange = _domain.createExchange(
-                serviceName, ExchangePattern.IN_ONLY);
+                service, ServiceInterface.DEFAULT_OPERATION);
         
-        // Set the from and to message names.  NOTE: setting to the to message
-        // name will not be necessary once the service definition is available
-        // at runtime
+        // Set the from message name.
         Context msgCtx = exchange.getContext(Scope.MESSAGE);
         msgCtx.setProperty("org.switchyard.message.name", fromName);
-        msgCtx.setProperty("org.switchyard.service.message.name", toName);
         
         Message msg = MessageBuilder.newInstance().buildMessage();
         msg.setContent(input);

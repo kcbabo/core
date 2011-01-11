@@ -25,6 +25,9 @@ package org.switchyard.metadata;
 import java.util.Set;
 
 public interface ServiceInterface {
+
+    String DEFAULT_OPERATION = "process";
+    
     Set<ServiceOperation> getOperations();
     ServiceOperation getOperation(String name);
 }

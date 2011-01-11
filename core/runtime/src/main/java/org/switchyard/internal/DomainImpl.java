@@ -22,11 +22,12 @@
 
 package org.switchyard.internal;
 
+import java.util.List;
+
 import javax.xml.namespace.QName;
 
 import org.switchyard.Exchange;
 import org.switchyard.ExchangeHandler;
-import org.switchyard.ExchangePattern;
 import org.switchyard.HandlerChain;
 import org.switchyard.Service;
 import org.switchyard.ServiceDomain;
@@ -35,6 +36,7 @@ import org.switchyard.internal.handlers.DeliveryHandler;
 import org.switchyard.internal.handlers.TransformHandler;
 import org.switchyard.metadata.InOutService;
 import org.switchyard.metadata.ServiceInterface;
+import org.switchyard.metadata.ServiceOperation;
 import org.switchyard.spi.Endpoint;
 import org.switchyard.spi.EndpointProvider;
 import org.switchyard.spi.ServiceRegistry;
@@ -75,22 +77,37 @@ public class DomainImpl implements ServiceDomain {
         _systemHandlers.addLast("addressing", new AddressingHandler(_registry));
         _systemHandlers.addLast("delivery", new DeliveryHandler());
     }
-
+    
     @Override
-    public Exchange createExchange(QName service, ExchangePattern pattern) {
-        return createExchange(service, pattern, null);
+    public Exchange createExchange(Service service, String operationName) {
+        return createExchange(service, operationName, null);
     }
 
-
+    @Override
+    public Exchange createExchange(Service service, ExchangeHandler handler) {
+        return createExchange(service, ServiceInterface.DEFAULT_OPERATION, handler);
+    }
 
     @Override
-    public Exchange createExchange(
-            QName service, ExchangePattern pattern, ExchangeHandler handler) {
+    public Exchange createExchange(Service service, String operationName,
+            ExchangeHandler handler) {
+        // Find the right operation on the service interface
+        ServiceOperation operation = 
+            service.getInterface().getOperation(operationName);
+        if (operation == null) {
+            throw new RuntimeException("Invalid operation " + operation.getName() +
+                    " for service " + service.getName());
+        }
         // setup the system handlers
         HandlerChain handlers = new DefaultHandlerChain();
         handlers.addLast("system.handlers", _systemHandlers);
         // create the exchange
-        ExchangeImpl exchange = new ExchangeImpl(service, pattern, handlers);
+        ExchangeImpl exchange = new ExchangeImpl(
+                service, operation.getExchangePattern(), handlers);
+        
+        // set the operation name
+        exchange.getContext().setProperty(
+                "org.switchyard.operation.name", operationName);
 
         if (handler != null) {
             // A response handler was specified, so setup a reply endpoint
@@ -131,6 +148,12 @@ public class DomainImpl implements ServiceDomain {
     @Override
     public TransformerRegistry getTransformerRegistry() {
         return _transformerRegistry;
+    }
+
+    @Override
+    public Service getService(QName serviceName) {
+        List<Service> services = _registry.getServices(serviceName);
+        return services.isEmpty() ? null : services.get(0);
     }
 
 }

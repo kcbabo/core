@@ -55,24 +55,11 @@ public class AddressingHandler implements ExchangeHandler {
 
     @Override
     public void handleMessage(Exchange exchange) throws HandlerException {
-
-        // we need to mess with some internal exchange details
+        // we need to mess with some internal exchange details - boo!
         ExchangeImpl ei = (ExchangeImpl) exchange;
 
         if (ei.getTarget() == null) {
-            // find the receiving channel
-            List<Service> serviceList =
-                _registry.getServices(exchange.getService());
-
-            if (serviceList.isEmpty()) {
-                // could not find a registered service - set the exchange
-                throw new HandlerException(
-                        "No endpoints for service " + exchange.getService());
-            }
-
-            // Endpoint selection is arbitrary at the moment
-            ServiceRegistration sr = (ServiceRegistration) serviceList.get(0);
-            ei.setTarget(sr.getEndpoint());
+            ei.setTarget(((ServiceRegistration)exchange.getService()).getEndpoint());
         }
     }
 

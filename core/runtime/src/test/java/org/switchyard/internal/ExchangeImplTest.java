@@ -49,7 +49,7 @@ public class ExchangeImplTest {
     
     @Before
     public void setUp() throws Exception {
-        _exchange = new ExchangeImpl(new QName("bleh"), ExchangePattern.IN_ONLY, null);
+        _exchange = new ExchangeImpl(null, null, null);
         _domain = ServiceDomains.getDomain();
     }
     
@@ -128,8 +128,7 @@ public class ExchangeImplTest {
         };
         
         Service service = _domain.registerService(serviceName, provider);
-        Exchange exchange = _domain.createExchange(
-                serviceName, ExchangePattern.IN_OUT, consumer);
+        Exchange exchange = _domain.createExchange(service, consumer);
         Message inMsg = MessageBuilder.newInstance().buildMessage();
         Context inCtx = exchange.createContext();
         inCtx.setProperty(sharedPropName, inPropVal);
@@ -180,8 +179,7 @@ public class ExchangeImplTest {
         };
         
         Service service = _domain.registerService(serviceName, provider);
-        Exchange exchange = _domain.createExchange(
-                serviceName, ExchangePattern.IN_OUT, consumer);
+        Exchange exchange = _domain.createExchange(service, consumer);
         Message inMsg = MessageBuilder.newInstance().buildMessage();
         inMsg.setContent(inMsgContent);
         exchange.send(inMsg);

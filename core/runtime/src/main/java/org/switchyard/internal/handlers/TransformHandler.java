@@ -32,6 +32,7 @@ import org.switchyard.HandlerException;
 import org.switchyard.Message;
 import org.switchyard.Scope;
 import org.switchyard.internal.transform.BaseTransformerRegistry;
+import org.switchyard.metadata.ServiceOperation;
 import org.switchyard.transform.Transformer;
 import org.switchyard.transform.TransformerRegistry;
 
@@ -48,9 +49,9 @@ public class TransformHandler extends BaseHandler {
 
     private static final String MESSAGE_NAME =
         "org.switchyard.message.name";
-    private static final String SERVICE_MESSAGE_NAME =
-        "org.switchyard.service.message.name";
-
+    private static final String OPERATION_NAME = 
+        "org.switchyard.operation.name";
+    
     private TransformerRegistry _registry;
 
     /**
@@ -116,13 +117,22 @@ public class TransformHandler extends BaseHandler {
         } else if (exchange.getContext().hasProperty(Transformer.class.getName())) {
             transform = (Transformer)
                 exchange.getContext().getProperty(Transformer.class.getName());
-        // look to see if we can find it in the transformer registry
-        } else {
+        } // look to see if we can find it in the transformer registry
+        else {
+            // get the from name from the current message
             Context msgCtx = exchange.getContext(Scope.MESSAGE);
-            String fromName = (String) msgCtx.getProperty(MESSAGE_NAME);
-            // temp hack - toName should actually come from the Service reference
-            String toName = (String) msgCtx.getProperty(SERVICE_MESSAGE_NAME);
-            transform = _registry.getTransformer(fromName, toName);
+            String fromName = (String)msgCtx.getProperty(MESSAGE_NAME);
+            
+            // get the to name from the service operation
+            String opName = (String)exchange.getContext().getProperty(OPERATION_NAME);
+            ServiceOperation operation = 
+                exchange.getService().getInterface().getOperation(opName);
+            if (operation != null) {
+                // TODO : This always assumes a transform on the input message,
+                // which is wrong
+                transform = _registry.getTransformer(
+                        fromName, operation.getInputMessage());
+            }
         }
 
         return transform;

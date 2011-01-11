@@ -33,6 +33,7 @@ import org.switchyard.ExchangePattern;
 import org.switchyard.HandlerChain;
 import org.switchyard.Message;
 import org.switchyard.Scope;
+import org.switchyard.Service;
 import org.switchyard.spi.Endpoint;
 
 /**
@@ -53,9 +54,9 @@ public class ExchangeImpl implements Exchange {
      */
     public static final String FAULT_MSG    = "fault";
 
-    private final String          _exchangeId;
-    private final ExchangePattern _pattern;
-    private final QName           _service;
+    private String          _exchangeId;
+    private ExchangePattern _pattern;
+    private Service         _service;
     private Message         _message;
     private final HandlerChain    _handlers;
     private Endpoint        _source;
@@ -69,7 +70,7 @@ public class ExchangeImpl implements Exchange {
      * @param pattern exchange pattern
      * @param handlers handlers
      */
-    ExchangeImpl(QName service, ExchangePattern pattern, HandlerChain handlers) {
+    ExchangeImpl(Service service, ExchangePattern pattern, HandlerChain handlers) {
         _service = service;
         _pattern = pattern;
         _handlers = handlers;
@@ -98,7 +99,7 @@ public class ExchangeImpl implements Exchange {
     }
 
     @Override
-    public QName getService() {
+    public Service getService() {
         return _service;
     }
 

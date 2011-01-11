@@ -43,26 +43,41 @@ public interface ServiceDomain {
      */
     String getName();
 
+    
     /**
-     * Creates a new Exchange to invoke service with the specified exchange
-     * pattern.
+     * Return a service instance bound to the specified name.
+     * @param serviceName name of the service
+     * @return service instance or null if no such service was found
+     */
+    Service getService(QName serviceName);
+    
+    /**
+     * Creates a new Exchange for the service and method specified.
+     * @param service the service to invoke
+     * @param operationName the operation being invoked
+     * @return a new Exchange instance
+     */
+    Exchange createExchange(Service service, String operationName);
+
+    /**
+     * Creates a new Exchange to invoke the default operation on the specified
+     * service.
      * @param service the service to invoke
      * @param pattern the message exchange pattern to use
      * @return a new Exchange instance
      */
-    Exchange createExchange(QName service, ExchangePattern pattern);
+    Exchange createExchange(Service service, ExchangeHandler handler);
+    
     /**
-     * Creates a new Exchange to invoke service with the specified exchange
-     * pattern.  The supplied ExchangeHandler is used to handle any faults or
+     * Creates a new Exchange for the service and method specified.
+     * The supplied ExchangeHandler is used to handle any faults or
      * reply messages that are generated as part of the message exchange.
      * @param service the service to invoke
-     * @param pattern the message exchange pattern to use
+     * @param operationName the operation being invoked
      * @param handler used to process response and fault messages
      * @return a new Exchange instance
      */
-    Exchange createExchange(QName service, 
-            ExchangePattern pattern,
-            ExchangeHandler handler);
+    Exchange createExchange(Service service, String operationName, ExchangeHandler handler);
 
     /**
      * Register a service with the domain.
