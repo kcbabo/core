@@ -6,13 +6,14 @@
       <groupId>org.switchyard</groupId>
       <artifactId>core-parent</artifactId>
       <version>1.0-SNAPSHOT</version>
-      <relativePath>../pom.xml</relativePath>
+      <relativePath>../../../../pom.xml</relativePath>
   </parent>
 
   <groupId>org.switchyard.archetypes</groupId>
-  <artifactId>switchyard.archetype.simple</artifactId>
+  <artifactId>switchyard-application</artifactId>
   <version>${parent.version}</version>
   <packaging>jar</packaging>
+  <name>Switchyard: Application Archetype</name>
   <properties>
     <switchyard.version>${parent.version}</switchyard.version>
   </properties>
