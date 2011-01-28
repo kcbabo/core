@@ -53,13 +53,14 @@ public class DeliveryHandler implements ExchangeHandler {
      */
     private void deliver(Exchange exchange) {
         ExchangeImpl ei = (ExchangeImpl) exchange;
-        Endpoint target = ei.getTarget();
 
-        // source and target switch seats with each send
-        if (ei.getSource() != null) {
-            ei.setTarget(ei.getSource());
+        switch (exchange.getPhase()) {
+        case IN :
+            ei.getTarget().send(exchange);
+            break;
+        case OUT:
+            ei.getSource().send(exchange);
+            break;
         }
-
-        target.send(exchange);
     }
 }

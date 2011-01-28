@@ -19,33 +19,18 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
+package org.switchyard;
 
-package org.switchyard.tests;
-
-import junit.framework.Assert;
-
-import org.junit.Test;
-import org.switchyard.MessageBuilder;
-import org.switchyard.internal.message.DefaultMessageBuilder;
-import org.switchyard.internal.message.StreamMessageBuilder;
-import org.switchyard.message.DefaultMessage;
-import org.switchyard.message.StreamMessage;
-
-public class MessageBuilderTest {
-    
-    @Test
-    public void testNewInstanceDefault() throws Exception {
-        MessageBuilder builder = MessageBuilder.newInstance();
-        Assert.assertTrue(builder instanceof DefaultMessageBuilder);
-    }
-    
-    @Test
-    public void testNewInstanceTyped() throws Exception {
-        MessageBuilder defaultBuilder = 
-            MessageBuilder.newInstance(DefaultMessage.class);
-        Assert.assertTrue(defaultBuilder instanceof DefaultMessageBuilder);
-        MessageBuilder streamBuilder = 
-            MessageBuilder.newInstance(StreamMessage.class);
-        Assert.assertTrue(streamBuilder instanceof StreamMessageBuilder);
-    }
+/**
+ * Represents the phase of an exchange.
+ */
+public enum ExchangePhase {
+    /**
+     * The input phase of an exchange
+     */
+    IN,
+    /**
+     * The output phase of an exchange
+     */
+    OUT
 }

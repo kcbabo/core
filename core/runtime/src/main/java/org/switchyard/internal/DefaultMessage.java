@@ -20,24 +20,35 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.switchyard.message;
+package org.switchyard.internal;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.activation.DataSource;
+
+import org.switchyard.Context;
 import org.switchyard.Message;
 
 /**
  * Default message.
  */
-@Builder("org.switchyard.internal.message.DefaultMessageBuilder")
 public class DefaultMessage implements Message {
     
+    private Context _context;
     private Object _content;
     private Map<String, DataSource> _attachments = 
         new HashMap<String, DataSource>();
+    
 
+    public DefaultMessage() {
+        _context = new DefaultContext();
+    }
+    
+    public DefaultMessage(Context context) {
+        _context = context;
+    }
+    
     @Override
     public DefaultMessage addAttachment(final String name, final DataSource attachment) {
         _attachments.put(name, attachment);
@@ -73,6 +84,11 @@ public class DefaultMessage implements Message {
     public DefaultMessage setContent(final Object content) {
         _content = content;
         return this;
+    }
+
+    @Override
+    public Context getContext() {
+        return _context;
     }
 
 }
