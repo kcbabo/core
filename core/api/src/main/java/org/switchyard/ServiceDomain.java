@@ -40,9 +40,9 @@ public interface ServiceDomain {
 
     /**
      * Name of the ServiceDomain. This is unique within a runtime.
-     * @return name name of the ServiceDomain.
+     * @return name of the ServiceDomain.
      */
-    String getName();
+    QName getName();
     
     /**
     * Return a service instance bound to the specified name.
@@ -51,35 +51,7 @@ public interface ServiceDomain {
     */
     Service getService(QName serviceName);
 
-    /**
-     * Creates a new Exchange to invoke service with the specified exchange
-     * pattern.
-     * @param service the service to invoke
-     * @param contract the exchange contract to use
-     * @return a new Exchange instance
-     */
-    Exchange createExchange(Service service, ExchangeContract contract);
-    /**
-     * Creates a new Exchange to invoke service with the specified exchange
-     * pattern.  The supplied ExchangeHandler is used to handle any faults or
-     * reply messages that are generated as part of the message exchange.
-     * @param service the service to invoke
-     * @param contract the exchange contract to use
-     * @param handler used to process response and fault messages
-     * @return a new Exchange instance
-     */
-    Exchange createExchange(Service service, ExchangeContract contract,
-            ExchangeHandler handler);
-
-    /**
-     * Register a service with the domain.
-     * @param serviceName the name of the service
-     * @param handler the handler to use to process exchanges directed at this
-     * service
-     * @return a reference to the registered service that can be used to
-     * unregister when required
-     */
-    Service registerService(QName serviceName, ExchangeHandler handler);
+    
 
     /**
      * Register a service with the domain.

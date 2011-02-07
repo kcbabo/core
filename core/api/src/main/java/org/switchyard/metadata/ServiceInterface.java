@@ -34,22 +34,6 @@ import java.util.Set;
  * to represent services which do not publish a formal contract.
  */
 public interface ServiceInterface {
-
-    /**
-     * Default interface type used when a concrete interface (Java, WSDL) is
-     * not provided by the service.
-     */
-    String DEFAULT_TYPE = "esb";
-    /**
-     * Default operation name for the default service interface.
-     */
-    String DEFAULT_OPERATION = "process";
-
-    /**
-     * The type of the interface - e.g. java, wsdl, esb, etc.
-     * @return the interface type
-     */
-    String getType();
     
     /**
      * The set of operations available on this service.
