@@ -20,7 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.switchyard.deploy;
+package org.switchyard.deploy.internal;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,6 +38,9 @@ import org.switchyard.config.model.composite.ComponentModel;
 import org.switchyard.config.model.composite.CompositeModel;
 import org.switchyard.config.model.composite.ExternalServiceModel;
 import org.switchyard.config.model.composite.InternalServiceModel;
+import org.switchyard.config.model.composite.ReferenceModel;
+import org.switchyard.deploy.BindingActivator;
+import org.switchyard.deploy.ImplementationActivator;
 import org.switchyard.internal.DefaultEndpointProvider;
 import org.switchyard.internal.DefaultServiceRegistry;
 import org.switchyard.internal.DomainImpl;
@@ -86,12 +89,14 @@ public class Deployer {
         createActivators();
         deployReferenceBindings();
         deployServices();
+        deployReferences();
         deployServiceBindings();
     }
 
     public void undeploy() {
         undeployServiceBindings();
         undeployServices();
+        undeployReferences();
         undeployReferenceBindings();
         destroyDomain();
     }
@@ -124,6 +129,7 @@ public class Deployer {
 
     private void deployReferenceBindings() {
         LOG.info("Deploying reference bindings ...");
+       
     }
 
     private void deployServices() {
@@ -141,6 +147,21 @@ public class Deployer {
             }
         }
         
+    }
+    
+    private void deployReferences() {
+        LOG.info("Deploying references ...");
+        for (ComponentModel component : _switchyardConfig.getComponents()) {
+            ImplementationActivator act = _implActivators.get(
+                    component.getImplementation().getType());
+            // register a service for each one declared in the component
+            for (ReferenceModel reference : component.getReferences()) {
+                LOG.info("Registering reference " + reference.getName() + 
+                        " for component " + component.getImplementation().getType());
+                Service service = _serviceDomain.getService(reference.getQName());
+                act.activateReference(reference.getQName(), service);
+            }
+        }
     }
 
     private void deployServiceBindings() {
@@ -162,6 +183,10 @@ public class Deployer {
 
     private void undeployServices() {
         LOG.info("Undeploying services ...");
+    }
+
+    private void undeployReferences() {
+        LOG.info("Undeploying references ...");
     }
 
     private void undeployReferenceBindings() {
