@@ -23,12 +23,12 @@ import javax.xml.namespace.QName;
 
 import org.switchyard.ExchangeHandler;
 import org.switchyard.Service;
-import org.switchyard.config.model.composite.BindingModel;
+import org.switchyard.config.model.Model;
 
-public interface BindingActivator {
-    ExchangeHandler activateReference(QName name, BindingModel config);
-    void deactivateReference(QName name);
-    
-    void activateService(Service service, BindingModel config);
-    void deactivateService(Service service);
+public interface Activator {
+
+    ExchangeHandler init(QName name, Model config);
+    void start(Service service);
+    void stop(Service service);
+    void destroy(Service service);
 }

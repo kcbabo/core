@@ -50,12 +50,8 @@ public class SwitchYardCDIBootstrapper implements Extension {
         InputStream swConfigStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("META-INF/switchyard.xml");
 
         if(swConfigStream != null) {
-            try {
-                deployer = new Deployer(swConfigStream);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            deployer.deploy();
+            deployer = new Deployer();
+            deployer.init(swConfigStream);
         }
     }
 
@@ -66,7 +62,7 @@ public class SwitchYardCDIBootstrapper implements Extension {
      */
     public void beforeShutdown(@Observes BeforeShutdown event) {
         if(deployer != null) {
-            deployer.undeploy();
+            deployer.destroy();
         }
     }
 }

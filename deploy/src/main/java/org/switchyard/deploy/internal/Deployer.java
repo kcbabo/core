@@ -22,7 +22,6 @@
 
 package org.switchyard.deploy.internal;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,8 +38,7 @@ import org.switchyard.config.model.composite.CompositeModel;
 import org.switchyard.config.model.composite.ExternalServiceModel;
 import org.switchyard.config.model.composite.InternalServiceModel;
 import org.switchyard.config.model.composite.ReferenceModel;
-import org.switchyard.deploy.BindingActivator;
-import org.switchyard.deploy.ImplementationActivator;
+import org.switchyard.deploy.Activator;
 import org.switchyard.internal.DefaultEndpointProvider;
 import org.switchyard.internal.DefaultServiceRegistry;
 import org.switchyard.internal.DomainImpl;
@@ -75,25 +73,30 @@ public class Deployer {
 
     private CompositeModel _switchyardConfig;
     private ServiceDomain _serviceDomain;
-    private Map<String, ImplementationActivator> _implActivators = 
-        new HashMap<String, ImplementationActivator>();
-    private Map<String, BindingActivator> _bindingActivators = 
-        new HashMap<String, BindingActivator>();
+    private Map<String, Activator> _activators = 
+        new HashMap<String, Activator>();
 
-    public Deployer(InputStream switchyardConfig) throws IOException {
-        _switchyardConfig = (CompositeModel)new ModelResource().pull(switchyardConfig);
+    public Deployer() {
     }
 
-    public void deploy() {
-        createDomain();
-        createActivators();
-        deployReferenceBindings();
-        deployServices();
-        deployReferences();
-        deployServiceBindings();
+    public void init(InputStream switchyardConfig) {
+        try {
+            // parse the config
+            _switchyardConfig = (CompositeModel)new ModelResource().pull(switchyardConfig);
+            // create a new domain and load activator instances for lifecycle
+            createDomain();
+            createActivators();
+            // ordered startup lifecycle
+            deployReferenceBindings();
+            deployReferences();
+            deployServices();
+            deployServiceBindings();
+        } catch (java.io.IOException ioEx) {
+            throw new RuntimeException("Failed to read switchyard config.", ioEx);
+        }
     }
 
-    public void undeploy() {
+    public void destroy() {
         undeployServiceBindings();
         undeployServices();
         undeployReferences();
@@ -119,8 +122,8 @@ public class Deployer {
 
     private void createActivators() {
         try {
-            _implActivators.put("bean", (ImplementationActivator)Class.forName(BEAN_ACTIVATOR_CLASS).newInstance());
-            _bindingActivators.put("soap", null);
+            _activators.put("bean", (Activator)Class.forName(BEAN_ACTIVATOR_CLASS).newInstance());
+            _activators.put("soap", null);
         }
         catch (Exception ex) {
             throw new RuntimeException("Failed to load activator class for component", ex);
@@ -136,14 +139,15 @@ public class Deployer {
         LOG.info("Deploying services ...");
         // deploy services to each implementation found in the application
         for (ComponentModel component : _switchyardConfig.getComponents()) {
-            ImplementationActivator act = _implActivators.get(
+            Activator activator = _activators.get(
                     component.getImplementation().getType());
             // register a service for each one declared in the component
             for (InternalServiceModel service : component.getServices()) {
                 LOG.info("Registering service " + service.getName() + 
                         " for component " + component.getImplementation().getType());
-                ExchangeHandler handler = act.activateService(service.getQName(), service);
-                _serviceDomain.registerService(service.getQName(), handler);
+                ExchangeHandler handler = activator.init(service.getQName(), service);
+                Service serviceRef = _serviceDomain.registerService(service.getQName(), handler);
+                activator.start(serviceRef);
             }
         }
         
@@ -152,14 +156,15 @@ public class Deployer {
     private void deployReferences() {
         LOG.info("Deploying references ...");
         for (ComponentModel component : _switchyardConfig.getComponents()) {
-            ImplementationActivator act = _implActivators.get(
+            Activator activator = _activators.get(
                     component.getImplementation().getType());
             // register a service for each one declared in the component
             for (ReferenceModel reference : component.getReferences()) {
                 LOG.info("Registering reference " + reference.getName() + 
                         " for component " + component.getImplementation().getType());
                 Service service = _serviceDomain.getService(reference.getQName());
-                act.activateReference(reference.getQName(), service);
+                activator.init(reference.getQName(), reference);
+                activator.start(service);
             }
         }
     }
