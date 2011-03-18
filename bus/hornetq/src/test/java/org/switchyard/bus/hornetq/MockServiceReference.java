@@ -25,14 +25,21 @@ import org.switchyard.Exchange;
 import org.switchyard.ExchangeHandler;
 import org.switchyard.ServiceReference;
 import org.switchyard.metadata.ExchangeContract;
+import org.switchyard.metadata.InOnlyService;
 import org.switchyard.metadata.ServiceInterface;
 
 public class MockServiceReference implements ServiceReference {
     
     private QName _serviceName;
+    private ServiceInterface _serviceInterface;
     
     public MockServiceReference(QName serviceName) {
+        this(serviceName, new InOnlyService());
+    }
+    
+    public MockServiceReference(QName serviceName, ServiceInterface serviceInterface) {
         _serviceName = serviceName;
+        _serviceInterface = serviceInterface;
     }
 
     @Override
@@ -48,7 +55,7 @@ public class MockServiceReference implements ServiceReference {
 
     @Override
     public ServiceInterface getInterface() {
-        return null;
+        return _serviceInterface;
     }
 
     @Override

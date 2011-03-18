@@ -33,6 +33,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.switchyard.ServiceReference;
 import org.switchyard.internal.DefaultHandlerChain;
+import org.switchyard.metadata.InOnlyService;
+import org.switchyard.metadata.InOutService;
 import org.switchyard.spi.Dispatcher;
 
 public class HornetQBusTest {
@@ -56,7 +58,12 @@ public class HornetQBusTest {
     public void testCreateDispatcher() throws Exception {
         // verify that endpoint creation works
         _provider.createDispatcher(
-                new MockServiceReference(new QName("testCreateDispatcher")), 
+                new MockServiceReference(new QName("inOnly"), new InOnlyService()), 
+                new DefaultHandlerChain());
+
+        // verify that endpoint creation works
+        _provider.createDispatcher(
+                new MockServiceReference(new QName("inOut"), new InOutService()), 
                 new DefaultHandlerChain());
     }
     
