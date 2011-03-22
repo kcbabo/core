@@ -22,18 +22,18 @@
 
 package org.switchyard.bus.hornetq;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.xml.namespace.QName;
 
-import org.hornetq.api.core.HornetQException;
 import org.hornetq.api.core.TransportConfiguration;
-import org.hornetq.api.core.client.ClientSession;
 import org.hornetq.api.core.client.ClientSessionFactory;
 import org.hornetq.api.core.client.HornetQClient;
 import org.hornetq.core.config.Configuration;
 import org.hornetq.core.config.impl.ConfigurationImpl;
+import org.hornetq.core.config.impl.FileConfiguration;
 import org.hornetq.core.remoting.impl.invm.InVMAcceptorFactory;
 import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
 import org.hornetq.core.server.HornetQServer;
@@ -47,7 +47,11 @@ import org.switchyard.spi.ExchangeBus;
 public class HornetQBus implements ExchangeBus {
     
     public static final String WORK_DIR = "org.switchyard.bus.hornetq.WorkDir";
+    public static final String CONFIG_PATH = "org.switchyard.bus.hornetq.ConfigPath";
+    public static final String SERVER_ID = "org.switchyard.bus.hornetq.ServerID";
+    public static final String DEFAULT_CONFIG_PATH = "hornetq-configuration.xml";
 
+    private Map<String, Object> _busConfig = new HashMap<String, Object>();
     private HornetQServer _server;
     private ClientSessionFactory _clientFactory;
     private HashMap<QName, HornetQDispatcher> _dispatchers = 
@@ -58,14 +62,19 @@ public class HornetQBus implements ExchangeBus {
     
     public void init(Map<String, Object> busConfig) {
         // Create the server
+        _busConfig = busConfig;
         _server = HornetQServers.newHornetQServer(getHornetQConfig(busConfig));
     }
     
     public synchronized void start() {
         try {
             _server.start();
+            Map<String, Object> sessionConfig = new HashMap<String, Object>();
+            if (_busConfig.containsKey(SERVER_ID)) {
+                sessionConfig.put("server-id", _busConfig.get(SERVER_ID));
+            }
             _clientFactory = HornetQClient.createClientSessionFactory(
-                    new TransportConfiguration(InVMConnectorFactory.class.getName()));
+                    new TransportConfiguration(InVMConnectorFactory.class.getName(), sessionConfig));
         } catch (Exception ex) {
             throw new RuntimeException("Failed to start HornetQProvider", ex);
         }
@@ -90,36 +99,50 @@ public class HornetQBus implements ExchangeBus {
     @Override
     public synchronized Dispatcher createDispatcher(
             ServiceReference service, HandlerChain handlerChain) {
-        
-        try {
-            ClientSession session = _clientFactory.createSession();
-            HornetQDispatcher endpoint = new HornetQDispatcher(service, session, handlerChain);
-            _dispatchers.put(service.getName(), endpoint);
-            endpoint.start();
-            return endpoint;
-        } catch (HornetQException hqEx) {
-            throw new RuntimeException("Failed to create HornetQ endpoint", hqEx);
-        }
+        HornetQDispatcher endpoint = new HornetQDispatcher(service, _clientFactory, handlerChain);
+        _dispatchers.put(service.getName(), endpoint);
+        endpoint.start();
+        return endpoint;
     }
     
     HornetQServer getHornetQServer() {
         return _server;
     }
+
+    ClientSessionFactory getClientFactory() {
+        return _clientFactory;
+    }
     
     Configuration getHornetQConfig(Map<String, Object> providerConfig) {
-        // Generate the HornetQ configuration
-        Configuration config = new ConfigurationImpl();
-        config.setSecurityEnabled(false);
-        config.setJournalType(JournalType.NIO);
-        config.getAcceptorConfigurations().add(
-                new TransportConfiguration(InVMAcceptorFactory.class.getName()));
+        Configuration config = null;
+        // Sort out the hornetQ workspace and config file based on provider configuration
+        File workDir = new File((String)providerConfig.get(WORK_DIR));
+        String configPath = (String)providerConfig.get(CONFIG_PATH);
         
-        // Journal directory comes from provider configuration
-        String workDir = (String)providerConfig.get(WORK_DIR);
-        if (workDir != null) {
-            config.setJournalDirectory(workDir);
-            config.setBindingsDirectory(workDir);
-            config.setLargeMessagesDirectory(workDir);
+        // Create the HornetQ Configuration object
+        if (configPath != null) {
+            // Read existing HornetQ configuration
+            config = new FileConfiguration();
+            ((FileConfiguration)config).setConfigurationUrl(configPath);
+            try {
+                ((FileConfiguration)config).start();
+            } catch (Exception ex) {
+                throw new RuntimeException("Failed to parse HornetQ configuration.", ex);
+            }
+        } else {
+            // Generate the HornetQ configuration
+            config = new ConfigurationImpl();
+            config.setSecurityEnabled(false);
+            config.setJournalType(JournalType.NIO);
+            config.getAcceptorConfigurations().add(
+                    new TransportConfiguration(InVMAcceptorFactory.class.getName()));
+            
+            // Journal directory comes from provider configuration
+            if (workDir != null) {
+                config.setJournalDirectory(workDir.getAbsolutePath());
+                config.setBindingsDirectory(workDir.getAbsolutePath());
+                config.setLargeMessagesDirectory(workDir.getAbsolutePath());
+            }
         }
         return config;
     }

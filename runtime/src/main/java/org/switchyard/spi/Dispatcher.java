@@ -37,4 +37,8 @@ public interface Dispatcher {
      * @param exchange exchange
      */
     void dispatch(Exchange exchange);
+    
+    void start();
+    
+    void stop();
 }

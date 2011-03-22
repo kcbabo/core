@@ -25,9 +25,24 @@ package org.switchyard.bus.hornetq;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.xml.namespace.QName;
+
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.switchyard.BaseHandler;
+import org.switchyard.Exchange;
+import org.switchyard.ExchangePattern;
+import org.switchyard.HandlerException;
+import org.switchyard.ServiceReference;
+import org.switchyard.handlers.HandlerChain;
+import org.switchyard.internal.DefaultHandlerChain;
+import org.switchyard.internal.ExchangeImpl;
+import org.switchyard.metadata.ExchangeContract;
+import org.switchyard.metadata.InOnlyService;
+import org.switchyard.metadata.InOutService;
+import org.switchyard.spi.Dispatcher;
 
 public class HornetQDispatcherTest {
 
@@ -47,8 +62,72 @@ public class HornetQDispatcherTest {
     }
     
     @Test
-    public void testDispatch() throws Exception {
+    public void testDispatchInOnly() throws Exception {
+        ServiceReference service = new MockServiceReference(
+                new QName("testDispatchInOnly"),new InOnlyService());
+        HandlerChain inHandlers = new DefaultHandlerChain();
+        ExchangeSink sink = new ExchangeSink();
+        inHandlers.addLast("in", sink);
+        Dispatcher dispatch = _provider.createDispatcher(service, inHandlers);
         
+        Exchange exchange = new ExchangeImpl(service, ExchangeContract.IN_ONLY, dispatch, null);
+        exchange.send(null);
+        Thread.sleep(200);
+        
+        Assert.assertEquals(exchange, sink.getLastExchange());
+    }
+    
+
+    @Test
+    public void testDispatchInOut() throws Exception {
+        ServiceReference service = new MockServiceReference(
+                new QName("testDispatchInOut"),new InOutService());
+        // provider handlers
+        HandlerChain inHandlers = new DefaultHandlerChain();
+        ExchangeSink inHandler = new ExchangeSink(true);
+        inHandlers.addLast("in", inHandler);
+        // consumer handlers
+        Dispatcher dispatch = _provider.createDispatcher(service, inHandlers);
+        HandlerChain outHandlers = new DefaultHandlerChain();
+        ExchangeSink outHandler = new ExchangeSink();
+        outHandlers.addLast("out", outHandler);
+        
+        Exchange exchange = new ExchangeImpl(service, ExchangeContract.IN_OUT, dispatch, outHandlers);
+        exchange.send(null);
+        Thread.sleep(400);
+        
+        Assert.assertNotNull(outHandler.getLastExchange());
+        Assert.assertEquals(exchange, outHandler.getLastExchange());
+    }
+    
+}
+
+/**
+ * Holds a reference to the most recent exchange received by the handler.
+ */
+class ExchangeSink extends BaseHandler {
+   
+    private Exchange _lastExchange;
+    private boolean _reply;
+    
+    ExchangeSink() {
+        this(false);
+    }
+    
+    ExchangeSink(boolean reply) {
+        _reply = reply;
+    }
+
+    @Override
+    public void handleMessage(Exchange exchange) throws HandlerException {
+        _lastExchange = exchange;
+        if (_reply) {
+            exchange.send(null);
+        }
+    }
+    
+    Exchange getLastExchange() {
+        return _lastExchange;
     }
     
 }

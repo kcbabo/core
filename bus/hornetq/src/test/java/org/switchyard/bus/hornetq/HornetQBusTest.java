@@ -31,8 +31,11 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.switchyard.Exchange;
 import org.switchyard.ServiceReference;
 import org.switchyard.internal.DefaultHandlerChain;
+import org.switchyard.internal.ExchangeImpl;
+import org.switchyard.metadata.ExchangeContract;
 import org.switchyard.metadata.InOnlyService;
 import org.switchyard.metadata.InOutService;
 import org.switchyard.spi.Dispatcher;
@@ -56,12 +59,12 @@ public class HornetQBusTest {
     
     @Test
     public void testCreateDispatcher() throws Exception {
-        // verify that endpoint creation works
+        // verify that dispatchers can be created for an InOnly service
         _provider.createDispatcher(
                 new MockServiceReference(new QName("inOnly"), new InOnlyService()), 
                 new DefaultHandlerChain());
 
-        // verify that endpoint creation works
+        // verify that dispatchers can be created for an InOut service
         _provider.createDispatcher(
                 new MockServiceReference(new QName("inOut"), new InOutService()), 
                 new DefaultHandlerChain());
@@ -73,5 +76,17 @@ public class HornetQBusTest {
         Dispatcher dispatch = _provider.createDispatcher(service, new DefaultHandlerChain());
         
         Assert.assertEquals(dispatch, _provider.getDispatcher(service));
+    }
+    
+    @Test
+    public void testUseExistingHornetQConfig() throws Exception {
+        HornetQBus bus = new HornetQBus();
+        Map<String, Object> config = new HashMap<String, Object>();
+        config.put(HornetQBus.WORK_DIR, "target/configTest");
+        config.put(HornetQBus.CONFIG_PATH, "configTest/hornetq-configuration.xml");
+        config.put(HornetQBus.SERVER_ID, "1");
+        bus.init(config);
+        bus.start();
+        bus.stop();
     }
 }

@@ -22,48 +22,42 @@
 
 package org.switchyard.bus.hornetq;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.hornetq.api.core.HornetQException;
 import org.hornetq.api.core.Message;
 import org.hornetq.api.core.client.ClientConsumer;
 import org.hornetq.api.core.client.ClientMessage;
 import org.hornetq.api.core.client.ClientProducer;
 import org.hornetq.api.core.client.ClientSession;
+import org.hornetq.api.core.client.ClientSessionFactory;
 import org.hornetq.api.core.client.MessageHandler;
 import org.switchyard.Exchange;
 import org.switchyard.ExchangePattern;
 import org.switchyard.ExchangePhase;
 import org.switchyard.ServiceReference;
 import org.switchyard.handlers.HandlerChain;
+import org.switchyard.internal.ExchangeImpl;
+import org.switchyard.metadata.ExchangeContract;
 import org.switchyard.metadata.ServiceOperation;
 import org.switchyard.spi.Dispatcher;
 
-public class HornetQDispatcher implements Dispatcher {
+public class HornetQDispatcher implements Dispatcher, MessageHandler {
 
     private ServiceReference _service;
     private DispatchQueue _inQueue;
     private DispatchQueue _outQueue;
-    private ClientSession _session;
-    private HandlerChain _handlers;
+    private ClientSessionFactory _sessionFactory;
+    private HandlerChain _inputHandler;
+    private Map<String, HandlerChain> _outputHandlers = new ConcurrentHashMap<String, HandlerChain>();
     
     public HornetQDispatcher(ServiceReference service, 
-            ClientSession session, 
-            HandlerChain handlers) {
+            ClientSessionFactory sessionFactory, 
+            HandlerChain inputHandler) {
         _service = service;
-        _session = session;
-        
-        // Create a queue for receiving input messages
-        _inQueue = new DispatchQueue(session, 
-                service.getName().toString() + ExchangePhase.IN,
-                new InputHandler(_handlers));
-        // Check to see if a queue is required for output messages based on operation MEPs
-        for (ServiceOperation op : service.getInterface().getOperations()) {
-            if (op.getExchangePattern().equals(ExchangePattern.IN_OUT)) {
-                // Found at least one InOut, so we need a reply queue
-                _outQueue = new DispatchQueue(session, 
-                        service.getName().toString() + ExchangePhase.OUT,
-                        new OutputHandler());
-            }
-        }
+        _sessionFactory = sessionFactory;
+        _inputHandler = inputHandler;
     }
     
     @Override
@@ -73,32 +67,51 @@ public class HornetQDispatcher implements Dispatcher {
 
     @Override
     public void dispatch(Exchange exchange) {
-        Message msg = _session.createMessage(false);  // NOT PERSISTENT
-        msg.getBodyBuffer().writeString(exchange.getId());
+        DispatchQueue dispatch = null;
+        
+        if (exchange.getPhase().equals(ExchangePhase.IN)) {
+             dispatch = _inQueue;
+             if (ExchangePattern.IN_OUT.equals(exchange.getContract().getServiceOperation().getExchangePattern())) {
+                 _outputHandlers.put(exchange.getId(), ((ExchangeImpl)exchange).getReplyChain());
+             }
+        } else if (exchange.getPhase().equals(ExchangePhase.OUT)) {
+            dispatch = _outQueue;
+        } else {
+            throw new IllegalArgumentException(
+                    "Invalid exchange phase for dispatch: " + exchange.getPhase());
+        }
+        
         try {
-            switch (exchange.getPhase()) {
-            case IN:
-                _inQueue.getProducer().send(msg);
-                break;
-            case OUT:
-                _outQueue.getProducer().send(msg);
-                break;
-            }
+            Message msg = exchangeToMessage(exchange, dispatch.getSession());
+            dispatch.getProducer().send(msg);
         } catch (HornetQException hqEx) {
             throw new RuntimeException("Send to HornetQ endpoint failed", hqEx);
+        }
+    }
+
+    @Override
+    public void onMessage(ClientMessage message) {
+        Exchange exchange = messageToExchange(message);
+        if (ExchangePhase.IN.equals(exchange.getPhase())) {
+            _inputHandler.handle(exchange);
+        } else if (ExchangePhase.OUT.equals(exchange.getPhase())) {
+            HandlerChain chain = _outputHandlers.remove(exchange.getId());
+            if (chain != null) {
+                chain.handle(exchange);
+            }
         }
     }
     
     @Override
     public void stop() {
-        try { 
+        try {
             if (_inQueue != null) {
                 _inQueue.destroy();
             }
+            
             if (_outQueue != null) {
                 _outQueue.destroy();
             }
-            _session.stop();
         } catch (HornetQException ex) {
             throw new RuntimeException("Failed to stop HornetQ endpoint " + _service.getName(), ex);
         }
@@ -107,42 +120,54 @@ public class HornetQDispatcher implements Dispatcher {
     @Override
     public void start() {
         try {
-            if (_inQueue != null) {
-                _inQueue.init();
+            // Create a queue for receiving input messages
+            _inQueue = new DispatchQueue(_sessionFactory.createSession(), 
+                    _service.getName().toString() + ExchangePhase.IN, this);
+            _inQueue.init();
+            
+            // Check to see if a queue is required for output messages based on operation MEPs
+            for (ServiceOperation op : _service.getInterface().getOperations()) {
+                if (op.getExchangePattern().equals(ExchangePattern.IN_OUT)) {
+                    // Found at least one InOut, so we need a reply queue
+                    _outQueue = new DispatchQueue(_sessionFactory.createSession(), 
+                            _service.getName().toString() + ExchangePhase.OUT, this);
+                    _outQueue.init();
+                    break;
+                }
             }
-            if (_outQueue != null) {
-                _outQueue.init();
-            }
-            _session.start();
         } catch (HornetQException ex) {
             throw new RuntimeException("Failed to start HornetQ endpoint " + _service.getName(), ex);
         }
     }
     
-}
-
-class InputHandler implements MessageHandler {
-
-    private HandlerChain _handler;
-    
-    InputHandler(HandlerChain handler) {
-        _handler = handler;
+    private Exchange messageToExchange(Message message) {
+        // Read serialized exchange info from message body:
+        //     1: exchange ID
+        //     2: message exchange pattern
+        //     3: exchange phase
+        String exchangeId = message.getBodyBuffer().readString();
+        String mep = message.getBodyBuffer().readString();
+        String phase = message.getBodyBuffer().readString();
+        
+        // This is a hack until we have serialization stuff sorted
+        ExchangeContract contract = ExchangePattern.IN_ONLY.equals(mep) ?
+                ExchangeContract.IN_ONLY : ExchangeContract.IN_OUT;
+        ExchangePhase exchangePhase = ExchangePhase.valueOf(phase);
+        
+        return new ExchangeImpl(exchangeId, this, exchangePhase, contract);
     }
     
-    @Override
-    public void onMessage(ClientMessage message) {
-        System.out.println("Received exchange input " + message.getBodyBuffer().readString());
-        // deserialize and hand off to handler chain
-        //_handler.handle(exchange);
-    }
-     
-}
-
-class OutputHandler implements MessageHandler {
-
-    @Override
-    public void onMessage(ClientMessage message) {
-        System.out.println("Received exchange output " + message.getBodyBuffer().readString());
+    private static Message exchangeToMessage(Exchange exchange, ClientSession session) {
+        Message msg = session.createMessage(false);  // NOT PERSISTENT
+        // Write serialized exchange info to message body:
+        //     1: exchange ID
+        //     2: message exchange pattern
+        //     3: exchange phase
+        msg.getBodyBuffer().writeString(exchange.getId());
+        msg.getBodyBuffer().writeString(exchange.getContract().getServiceOperation().getExchangePattern().toString());
+        msg.getBodyBuffer().writeString(exchange.getPhase().toString());
+        
+        return msg;
     }
     
 }
@@ -162,6 +187,7 @@ class DispatchQueue {
     }
     
     void init() throws HornetQException {
+        _session.start();
         _session.createQueue(_name, _name);
         _producer = _session.createProducer(_name);
         if (_handler != null) {
@@ -174,10 +200,15 @@ class DispatchQueue {
         _consumer.close();
         _producer.close();
         _session.deleteQueue(_name);
+        _session.close();
     }
     
     String getName() {
         return _name;
+    }
+    
+    ClientSession getSession() {
+        return _session;
     }
     
     ClientConsumer getConsumer() {
