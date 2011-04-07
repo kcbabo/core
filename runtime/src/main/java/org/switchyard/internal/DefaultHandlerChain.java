@@ -142,7 +142,7 @@ public class DefaultHandlerChain implements HandlerChain {
             TransformSequence.
                 from(exceptionTypeName).
                 to(invokerFaultTypeName).
-                associateWith(faultMessage.getContext());
+                associateWith(exchange);
         }
     }
     

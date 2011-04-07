@@ -29,6 +29,8 @@ import org.apache.log4j.Logger;
 import org.switchyard.Context;
 import org.switchyard.Exchange;
 import org.switchyard.Message;
+import org.switchyard.Property;
+import org.switchyard.Scope;
 
 /**
  * Transformation sequence/pipeline.
@@ -66,10 +68,16 @@ public final class TransformSequence implements Serializable {
     /**
      * Associate this instance with the supplied message context.
      *
-     * @param msgCtx The message context. NB: Will be the Exchange once the "zap on send" issue is resolved.
+     * @param msgCtx The message context
      */
-    public void associateWith(Context msgCtx) {
-        msgCtx.setProperty(TransformSequence.class.getName(), this);
+    public void associateWith(Exchange exchange) {
+        Scope scope = Scope.activeScope(exchange);
+        // Exchange phase can be null in tests, so use the IN scope in that case
+        if (scope == null) {
+            scope = Scope.IN;
+        }
+        exchange.getContext().setProperty(
+                TransformSequence.class.getName(), this, scope);
     }
 
     /**
@@ -133,7 +141,7 @@ public final class TransformSequence implements Serializable {
      *         no TransformSequence is set on the exchange.
      */
     public static QName getCurrentMessageType(final Exchange exchange) {
-        TransformSequence transformSequence = get(exchange.getMessage());
+        TransformSequence transformSequence = get(exchange);
 
         if (transformSequence != null && !transformSequence._sequence.isEmpty()) {
             return transformSequence._sequence.get(0);
@@ -150,7 +158,7 @@ public final class TransformSequence implements Serializable {
      *         no TransformSequence is set on the exchange.
      */
     public static QName getTargetMessageType(final Exchange exchange) {
-        TransformSequence transformSequence = get(exchange.getMessage());
+        TransformSequence transformSequence = get(exchange);
 
         if (transformSequence != null && !transformSequence._sequence.isEmpty()) {
             // Return the last entry in the sequence...
@@ -187,7 +195,7 @@ public final class TransformSequence implements Serializable {
      */
     public static void applySequence(final Exchange exchange, final TransformerRegistry registry) {
         Message message = exchange.getMessage();
-        TransformSequence transformSequence = get(message);
+        TransformSequence transformSequence = get(exchange);
 
         if (transformSequence == null) {
             return;
@@ -203,12 +211,12 @@ public final class TransformSequence implements Serializable {
         _sequence.add(typeName);
     }
 
-    private static TransformSequence get(final Message message) {
-        if (message == null) {
+    private static TransformSequence get(final Exchange exchange) {
+        Property sequenceProperty = exchange.getContext().getProperty(TransformSequence.class.getName(), Scope.activeScope(exchange));
+        if (sequenceProperty != null) {
+            return (TransformSequence)sequenceProperty.getValue();
+        } else {
             return null;
         }
-
-        Context context = message.getContext();
-        return (TransformSequence) context.getProperty(TransformSequence.class.getName());
     }
 }

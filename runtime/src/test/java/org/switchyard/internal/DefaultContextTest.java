@@ -19,11 +19,12 @@
 
 package org.switchyard.internal;
 
-import java.util.Map;
+import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.switchyard.Property;
 
 /**
  *  Tests for context-related operations.
@@ -42,51 +43,36 @@ public class DefaultContextTest {
     @Test
     public void testGetSet() throws Exception {
         _context.setProperty(PROP_NAME, PROP_VAL);
-        Assert.assertEquals(PROP_VAL, _context.getProperty(PROP_NAME));
-    }
-
-    @Test
-    public void testHasProperty() throws Exception {
-        Assert.assertFalse(_context.hasProperty(PROP_NAME));
-        _context.setProperty(PROP_NAME, PROP_VAL);
-        Assert.assertTrue(_context.hasProperty(PROP_NAME));
+        Assert.assertEquals(PROP_VAL, _context.getProperty(PROP_NAME).getValue());
     }
 
     @Test
     public void testRemove() throws Exception {
         _context.setProperty(PROP_NAME, PROP_VAL);
-        Assert.assertTrue(_context.hasProperty(PROP_NAME));
-        _context.removeProperty(PROP_NAME);
-        Assert.assertFalse(_context.hasProperty(PROP_NAME));
-    }
-    
-    @Test
-    public void testRemoveNonexistent() throws Exception {
-        // Removing a nonexistent property should not throw an exception
-        final String propName = "blahFooYech";
-        Assert.assertFalse(_context.hasProperty(propName));
-        _context.removeProperty(propName);
+        Property p = _context.getProperty(PROP_NAME);
+        Assert.assertEquals(PROP_VAL, p.getValue());
+        _context.removeProperty(p);
+        Assert.assertNull(_context.getProperty(PROP_NAME));
     }
     
     @Test
     public void testNullContextValue() throws Exception {
-        _context.setProperty(PROP_NAME, PROP_VAL);
-        Assert.assertTrue(_context.hasProperty(PROP_NAME));
-        // setting the value to null should remove the property from context
         _context.setProperty(PROP_NAME, null);
-        Assert.assertFalse(_context.hasProperty(PROP_NAME));
+        Property p = _context.getProperty(PROP_NAME);
+        Assert.assertNotNull(p);
+        Assert.assertNull(p.getValue());
     }
 
     @Test
     public void testGetProperties() throws Exception {
         _context.setProperty(PROP_NAME, PROP_VAL);
-        Map<String, Object> props = _context.getProperties();
-        Assert.assertEquals(PROP_VAL, props.get(PROP_NAME));
+        Set<Property> props = _context.getProperties();
+        Assert.assertTrue(props.size() == 1);
+        Assert.assertEquals(PROP_VAL, props.iterator().next().getValue());
         
         // operations to the returned map should *not* be reflected in the context
         props.remove(PROP_NAME);
-        Assert.assertFalse(props.containsKey(PROP_NAME));
-        Assert.assertTrue(_context.hasProperty(PROP_NAME));
+        Assert.assertTrue(_context.getProperties().size() == 1);
     }
     
 }

@@ -19,13 +19,18 @@
 
 package org.switchyard.internal;
 
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Set;
 
 import org.switchyard.Context;
+import org.switchyard.Property;
+import org.switchyard.Scope;
 import org.switchyard.io.Serialization.AccessType;
 import org.switchyard.io.Serialization.CoverageType;
+import org.switchyard.io.Serialization.Factory;
 import org.switchyard.io.Serialization.Strategy;
 
 /**
@@ -33,40 +38,66 @@ import org.switchyard.io.Serialization.Strategy;
  */
 @Strategy(access=AccessType.FIELD, coverage=CoverageType.INCLUSIVE)
 public class DefaultContext implements Context {
-
-    private final ConcurrentHashMap<String, Object> _properties =
-        new ConcurrentHashMap<String, Object>();
+    
+    private ScopedPropertyMap _properties = new ScopedPropertyMap();
 
     @Override
-    public Object getProperty(final String name) {
-        return _properties.get(name);
+    public Property getProperty(String name, Scope scope) {
+        return _properties.get(scope, name);
     }
 
     @Override
-    public Map<String, Object> getProperties() {
-        // create a shallow copy to prevent against direct modification of
-        // underlying context map
-        return new HashMap<String, Object>(_properties);
+    public Object getPropertyValue(String name) {
+       Property prop = _properties.get(Scope.EXCHANGE, name);
+       if (prop != null) {
+           return prop.getValue();
+       } else {
+           return null;
+       }
     }
 
     @Override
-    public boolean hasProperty(final String name) {
-        return _properties.containsKey(name);
+    public void removeProperties() {
+        _properties.clear();
     }
 
     @Override
-    public Object removeProperty(final String name) {
-        return _properties.remove(name);
+    public void removeProperties(Scope scope) {
+        _properties.clear(scope);
     }
 
     @Override
-    public void setProperty(final String name, final Object val) {
-        if (name != null) {
-            if (val != null) {
-                _properties.put(name, val);
-            } else {
-                _properties.remove(name);
-            }
+    public Context setProperties(Set<Property> properties) {
+        for (Property p : properties) {
+            _properties.put(p);
         }
+        return this;
+    }
+
+    @Override
+    public Context setProperty(String name, Object val, Scope scope) {
+        _properties.put(new ContextProperty(name, scope, val));
+        return this;
+    }
+
+    @Override
+    public Set<Property> getProperties() {
+        return _properties.get();
+    }
+
+    @Override
+    public void removeProperty(Property property) {
+        _properties.remove(property);
+    }
+
+    @Override
+    public Property getProperty(String name) {
+        return _properties.get(Scope.EXCHANGE, name);
+    }
+
+    @Override
+    public Context setProperty(String name, Object val) {
+        _properties.put(new ContextProperty(name, Scope.EXCHANGE, val));
+        return this;
     }
 }

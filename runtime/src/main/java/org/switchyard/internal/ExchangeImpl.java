@@ -31,6 +31,7 @@ import org.switchyard.ExchangePattern;
 import org.switchyard.ExchangePhase;
 import org.switchyard.ExchangeState;
 import org.switchyard.Message;
+import org.switchyard.Scope;
 import org.switchyard.ServiceReference;
 import org.switchyard.handlers.HandlerChain;
 import org.switchyard.internal.ExchangeImpl.ExchangeImplFactory;
@@ -52,7 +53,6 @@ public class ExchangeImpl implements Exchange {
 
     private static Logger _log = Logger.getLogger(ExchangeImpl.class);
 
-    @Include private String           _exchangeId;
     @Include private ExchangeContract _contract;
     @Include private ExchangePhase    _phase;
     private ServiceReference          _service;
@@ -120,7 +120,6 @@ public class ExchangeImpl implements Exchange {
         _dispatch = dispatch;
         _transformerRegistry = transformerRegistry;
         _replyChain = replyChain;
-        _exchangeId = UUID.randomUUID().toString();
         _context = new DefaultContext();
     }
 
@@ -140,11 +139,6 @@ public class ExchangeImpl implements Exchange {
     }
 
     @Override
-    public String getId() {
-        return _exchangeId;
-    }
-
-    @Override
     public Message getMessage() {
         return _message;
     }
@@ -156,10 +150,13 @@ public class ExchangeImpl implements Exchange {
         // Set exchange phase
         if (_phase == null) {
             _phase = ExchangePhase.IN;
-            initInTransformSequence(message);
+            initInTransformSequence();
         } else if (_phase.equals(ExchangePhase.IN)) {
             _phase = ExchangePhase.OUT;
-            initOutTransformSequence(message);
+            initOutTransformSequence();
+            // set relatesTo header on OUT context
+            _context.setProperty(Message.RELATES_TO, _context.getProperty(
+                    Message.MESSAGE_ID, Scope.IN).getValue(), Scope.OUT);
         } else {
             throw new IllegalStateException(
                     "Send message not allowed for exchange in phase " + _phase);
@@ -211,24 +208,6 @@ public class ExchangeImpl implements Exchange {
         _dispatch = dispatch;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof ExchangeImpl)) {
-            return false;
-        }
-        if (obj == this) {
-            return true;
-        }
-        
-        // two exchanges with the same id are equal
-        return ((ExchangeImpl)obj).getId().equals(_exchangeId);
-    }
-    
-    @Override
-    public int hashCode() {
-        return _exchangeId.hashCode();
-    }
-
     /**
      * Internal send method common to sendFault and sendMessage.  This method
      * assumes that the exchange phase has been assigned for the send and that
@@ -237,6 +216,8 @@ public class ExchangeImpl implements Exchange {
      */
     private void sendInternal(Message message) {
         _message = message;
+        // assign messageId
+        _context.setProperty(Message.MESSAGE_ID, UUID.randomUUID().toString(), Scope.activeScope(this));
         // if a fault was thrown by the handler chain and there's no reply chain
         // we need to log.
         // TODO : stick this in a central fault/error queue
@@ -263,7 +244,7 @@ public class ExchangeImpl implements Exchange {
         return _phase;
     }
 
-    private void initInTransformSequence(Message message) {
+    private void initInTransformSequence() {
         QName exchangeInputType = _contract.getInvokerInvocationMetaData().getInputType();
         QName serviceOperationInputType = _contract.getServiceOperation().getInputType();
 
@@ -271,11 +252,11 @@ public class ExchangeImpl implements Exchange {
             TransformSequence.
                     from(exchangeInputType).
                     to(serviceOperationInputType).
-                    associateWith(message.getContext());
+                    associateWith(this);
         }
     }
 
-    private void initOutTransformSequence(Message message) {
+    private void initOutTransformSequence() {
         QName serviceOperationOutputType = _contract.getServiceOperation().getOutputType();
         QName exchangeOutputType = _contract.getInvokerInvocationMetaData().getOutputType();
 
@@ -283,7 +264,7 @@ public class ExchangeImpl implements Exchange {
             TransformSequence.
                     from(serviceOperationOutputType).
                     to(exchangeOutputType).
-                    associateWith(message.getContext());
+                    associateWith(this);
         }
     }
 }

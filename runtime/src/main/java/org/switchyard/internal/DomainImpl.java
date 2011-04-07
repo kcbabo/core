@@ -134,12 +134,4 @@ public class DomainImpl implements ServiceDomain {
         List<Service> services = _registry.getServices(serviceName);
         return services.isEmpty() ? null : services.get(0).getReference();
     }
-    
-    /**
-     * Returns an endpoint name based on the domain name, service name, and 
-     * exchange phase.
-     */
-    private String getEndpointName(QName serviceName, ExchangePhase phase) {
-        return _name + ":" + serviceName + ":" + phase.toString();
-    }
 }

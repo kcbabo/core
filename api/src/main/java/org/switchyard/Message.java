@@ -45,13 +45,10 @@ import javax.activation.DataSource;
  * </ul>
  */
 public interface Message {
-
-    /**
-     * Retrieves the message context.
-     * @return the exchange context
-     */
-    Context getContext();
     
+    String MESSAGE_ID = "org.switchyard.messageId";
+    String RELATES_TO = "org.switchyard.relatesTo";
+
     /**
      * Assigns the specified content to the body of this message.
      *

@@ -39,18 +39,11 @@ public interface Exchange {
     Context getContext();
 
     /**
-     * The unique identifier for this Exchange instance.  The exchange
-     * id can be used to correlate message and fault activity within a message
-     * exchange.  This value is assigned at Exchange creation time and never
-     * changes over the lifetime of the exchange.
-     * @return exchange id as a string.
-     */
-    String getId();
-    /**
      * Get the contract associated with this exchange.
      * @return The exchange contract.
      */
     ExchangeContract getContract();
+    
     /**
      * The service being invoked by this exchange.
      * @return Service to be invoked

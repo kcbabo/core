@@ -90,11 +90,10 @@ public class TransformationTest {
             // name will not be necessary once the service definition is available
             // at runtime
             Message msg = exchange.createMessage().setContent(input);
-            Context msgCtx = msg.getContext();
             TransformSequence.
                     from(inType).
                     to(expectedDestType).
-                    associateWith(msgCtx);
+                    associateWith(exchange);
 
             msg.setContent(input);
             exchange.send(msg);
@@ -132,11 +131,10 @@ public class TransformationTest {
         // name will not be necessary once the service definition is available
         // at runtime
         Message msg = exchange.createMessage().setContent(input);
-        Context msgCtx = msg.getContext();
         TransformSequence.
                 from(inType).
                 to(expectedDestType).
-                associateWith(msgCtx);
+                associateWith(exchange);
 
         msg.setContent(input);
 
