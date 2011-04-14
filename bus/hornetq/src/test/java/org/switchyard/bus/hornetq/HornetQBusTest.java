@@ -46,10 +46,10 @@ public class HornetQBusTest {
 
     @Before
     public void setUp() throws Exception {
-        Map<String, Object> config = new HashMap<String, Object>();
+        Map<String, String> config = new HashMap<String, String>();
         config.put(HornetQBus.WORK_DIR, "target/hornetQ");
-        _provider = new HornetQBus(config);
-        _provider.start();
+        _provider = new HornetQBus();
+        _provider.init(null, config);
     }
     
     @After

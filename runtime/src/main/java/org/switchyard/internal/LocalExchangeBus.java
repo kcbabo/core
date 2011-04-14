@@ -19,16 +19,17 @@
 
 package org.switchyard.internal;
 
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.namespace.QName;
 
 import org.switchyard.Exchange;
+import org.switchyard.ServiceDomain;
 import org.switchyard.ServiceReference;
 import org.switchyard.handlers.HandlerChain;
 import org.switchyard.spi.Dispatcher;
 import org.switchyard.spi.ExchangeBus;
-import org.switchyard.transform.TransformerRegistry;
 
 /**
  * Default endpoint provider.
@@ -40,7 +41,7 @@ public class LocalExchangeBus implements ExchangeBus {
 
     @Override
     public synchronized Dispatcher createDispatcher(
-            ServiceReference service, HandlerChain handlerChain, TransformerRegistry transformerRegistry) {
+            ServiceReference service, HandlerChain handlerChain) {
         Dispatcher dispatcher = new LocalDispatcher(service, handlerChain);
         _dispatchers.put(service.getName(), dispatcher);
         return dispatcher;
@@ -49,6 +50,18 @@ public class LocalExchangeBus implements ExchangeBus {
     @Override
     public Dispatcher getDispatcher(ServiceReference service) {
         return _dispatchers.get(service.getName());
+    }
+
+    @Override
+    public void destroy() {
+        // NOP
+        
+    }
+
+    @Override
+    public void init(ServiceDomain domain, Map<String, String> config) {
+        // NOP
+        
     }
 }
 

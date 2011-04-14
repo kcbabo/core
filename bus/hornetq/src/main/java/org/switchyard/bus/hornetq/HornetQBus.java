@@ -39,6 +39,7 @@ import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
 import org.hornetq.core.server.HornetQServer;
 import org.hornetq.core.server.HornetQServers;
 import org.hornetq.core.server.JournalType;
+import org.switchyard.ServiceDomain;
 import org.switchyard.ServiceReference;
 import org.switchyard.handlers.HandlerChain;
 import org.switchyard.spi.Dispatcher;
@@ -72,35 +73,54 @@ public class HornetQBus implements ExchangeBus {
     /**
      * The unique identifier for the HornetQ server's acceptor and client 
      * connections.  If running multiple bus instances in a single VM, you will
-     * need to provide use this property with unique values.
+     * need to use this property with unique values.
      */
     public static final String SERVER_ID = "org.switchyard.bus.hornetq.ServerId";
 
-    private Map<String, Object> _busConfig = new HashMap<String, Object>();
+    private Map<String, String> _config = new HashMap<String, String>();
     private HornetQServer _server;
+    private boolean _initialized;
     private ClientSessionFactory _clientFactory;
+    private ServiceDomain _domain;
     private HashMap<QName, HornetQDispatcher> _dispatchers = 
         new HashMap<QName, HornetQDispatcher>();
 
     /**
-     * Create a new HornetQ bus provider using the specified config.
-     * @param busConfig provider configuration
+     * Create a new HornetQ bus provider
      */
-    public HornetQBus(Map<String, Object> busConfig) {
-        // Create the server
-        _busConfig = busConfig;
-        _server = HornetQServers.newHornetQServer(getHornetQConfig(busConfig));
+    public HornetQBus() {
+        
+    }
+    
+    @Override
+    public synchronized void init(ServiceDomain domain, Map<String, String> config) {
+        if (_initialized) {
+            throw new IllegalStateException("init cannot be called on an initialized ExchangeBus.");
+        }
+        _domain = domain;
+        _config = config;
+        // Create the HornetQ server
+        _server = HornetQServers.newHornetQServer(getHornetQConfig(config));
+        // Start bus resources
+        start();
+        _initialized = true;
+    }
+    
+    @Override
+    public synchronized void destroy() {
+        // Stop all dispatchers and tear down the HornetQ server
+        stop();
     }
     
     /**
      * Start the bus provider.  This will start the underlying HornetQ server.
      */
-    public synchronized void start() {
+    private synchronized void start() {
         try {
             _server.start();
             Map<String, Object> sessionConfig = new HashMap<String, Object>();
-            if (_busConfig.containsKey(SERVER_ID)) {
-                sessionConfig.put("server-id", _busConfig.get(SERVER_ID));
+            if (_config.containsKey(SERVER_ID)) {
+                sessionConfig.put("server-id", _config.get(SERVER_ID));
             }
             _clientFactory = HornetQClient.createClientSessionFactory(
                     getInVMTransportConfig(InVMConnectorFactory.class.getName()));
@@ -113,12 +133,14 @@ public class HornetQBus implements ExchangeBus {
      * Stop the provider.  This will stop all created Dispatcher instances and
      * then the HornetQ server.
      */
-    public synchronized void stop() {
+    private synchronized void stop() {
         try {
             for (HornetQDispatcher ep : _dispatchers.values()) {
                 ep.stop();
             }
+            _dispatchers.clear();
             _server.stop();
+            _initialized = false;
         } catch (Exception ex) {
             throw new RuntimeException("Failed to stop HornetQProvider", ex);
         }
@@ -131,8 +153,13 @@ public class HornetQBus implements ExchangeBus {
 
     @Override
     public synchronized Dispatcher createDispatcher(
-            ServiceReference service, HandlerChain handlerChain, TransformerRegistry transformerRegistry) {
-        HornetQDispatcher endpoint = new HornetQDispatcher(service, _clientFactory, handlerChain, transformerRegistry);
+            ServiceReference service, HandlerChain handlerChain) {
+        if (!_initialized) {
+            throw new IllegalArgumentException(
+                    "ExchangeBus must be initialized before a Dispatcher can be created.");
+        }
+        HornetQDispatcher endpoint = new HornetQDispatcher(
+                service, _clientFactory, handlerChain, _domain.getTransformerRegistry());
         _dispatchers.put(service.getName(), endpoint);
         endpoint.start();
         return endpoint;
@@ -146,11 +173,11 @@ public class HornetQBus implements ExchangeBus {
         return _clientFactory;
     }
     
-    Configuration getHornetQConfig(Map<String, Object> providerConfig) {
+    Configuration getHornetQConfig(Map<String, String> providerConfig) {
         Configuration config = null;
         // Sort out the hornetQ workspace and config file based on provider configuration
-        File workDir = new File((String)providerConfig.get(WORK_DIR));
-        String configPath = (String)providerConfig.get(CONFIG_PATH);
+        File workDir = new File(providerConfig.get(WORK_DIR));
+        String configPath = providerConfig.get(CONFIG_PATH);
         
         // Create the HornetQ Configuration object
         if (configPath != null) {
@@ -182,8 +209,8 @@ public class HornetQBus implements ExchangeBus {
 
     private TransportConfiguration getInVMTransportConfig(String transportClass) {
         Map<String, Object> sessionConfig = new HashMap<String, Object>();
-        if (_busConfig.containsKey(SERVER_ID)) {
-            sessionConfig.put("server-id", _busConfig.get(SERVER_ID));
+        if (_config.containsKey(SERVER_ID)) {
+            sessionConfig.put("server-id", _config.get(SERVER_ID));
         }
         
         return new TransportConfiguration(transportClass, sessionConfig);

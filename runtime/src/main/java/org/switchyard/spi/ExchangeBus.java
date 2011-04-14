@@ -19,23 +19,38 @@
 
 package org.switchyard.spi;
 
+import java.util.Map;
+
+import org.switchyard.ServiceDomain;
 import org.switchyard.ServiceReference;
 import org.switchyard.handlers.HandlerChain;
-import org.switchyard.transform.TransformerRegistry;
 
 /**
  * An implementation-neutral representation of a message bus.  The bus handles
  * dispatch for message exchange between service consumer and provider.
  */
 public interface ExchangeBus {
+
+    /**
+     * Initialize the dispatcher instance for the given domain and configuration.
+     * @param domain the service domain that this dispatcher will service
+     * @param config the configuration for the dispatcher provider
+     */
+    void init(ServiceDomain domain, Map<String, String> config);
+    
+    /**
+     * Stop all created dispatchers and clean up any resources allocated during
+     * initialization.
+     */
+    void destroy();
+    
     /**
      * Create an exchange dispatcher for the specified service and handler chain.
      * @param service service metadata
      * @param handlerChain handlers invoked by dispatcher on delivery
-     * @param transformerRegistry The {@link TransformerRegistry}.
      * @return Dispatcher service dispatch reference
      */
-    Dispatcher createDispatcher(ServiceReference service, HandlerChain handlerChain, TransformerRegistry transformerRegistry);
+    Dispatcher createDispatcher(ServiceReference service, HandlerChain handlerChain);
     
     /**
      * Retrieves a dispatcher for the specified service.

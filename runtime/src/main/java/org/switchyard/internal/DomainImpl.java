@@ -113,7 +113,7 @@ public class DomainImpl implements ServiceDomain {
         // Add a handler chain with the provider at the end
         HandlerChain handlers = _defaultHandlers.copy();
         handlers.addLast("provider", handler);
-        Dispatcher ep = _exchangeBus.createDispatcher(reference, handlers, _transformerRegistry);
+        Dispatcher ep = _exchangeBus.createDispatcher(reference, handlers);
         
         // register the service
         return _registry.registerService(reference, ep, this).getReference();
