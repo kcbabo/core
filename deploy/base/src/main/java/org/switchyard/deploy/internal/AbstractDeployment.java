@@ -19,15 +19,17 @@
 
 package org.switchyard.deploy.internal;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.ServiceLoader;
 
 import javax.xml.namespace.QName;
 
 import org.switchyard.ServiceDomain;
 import org.switchyard.config.model.switchyard.SwitchYardModel;
-import org.switchyard.internal.LocalExchangeBus;
 import org.switchyard.internal.DefaultServiceRegistry;
 import org.switchyard.internal.DomainImpl;
+import org.switchyard.internal.LocalExchangeBus;
 import org.switchyard.internal.transform.BaseTransformerRegistry;
 import org.switchyard.spi.ExchangeBus;
 import org.switchyard.spi.ServiceRegistry;
@@ -50,11 +52,11 @@ public abstract class AbstractDeployment {
     /**
      * Exchange Bus provider class name key.
      */
-    public static final String BUS_CLASS_NAME = "busProvider";
+    public static final String BUS_CLASS_NAME = "org.switchyard.spi.ExchangeBus";
     /**
      * Registry class name property.
      */
-    public static final String REGISTRY_CLASS_NAME = "registryProvider";
+    public static final String REGISTRY_CLASS_NAME = "org.switchyard.spi.ServiceRegistry";
 
     /**
      * Parent deployment.
@@ -140,8 +142,10 @@ public abstract class AbstractDeployment {
     }
 
     private void createDomain() {
+        // Initialize defaults
         String registryClassName = DefaultServiceRegistry.class.getName();
         String busClassName = LocalExchangeBus.class.getName();
+        Map<String, String> domainProps = new HashMap<String, String>();
         
         // Use domain configuration when creating registry and bus providers.
         // This is really a temporary measure as a domain should support multiple
@@ -153,14 +157,16 @@ public abstract class AbstractDeployment {
             if (_switchyardConfig.getDomain().getProperty(BUS_CLASS_NAME) != null) {
                 busClassName = _switchyardConfig.getDomain().getProperty(BUS_CLASS_NAME);
             }
+            domainProps = _switchyardConfig.getDomain().getProperties();
         }
 
         try {
             ServiceRegistry registry = getRegistry(registryClassName);
-            ExchangeBus endpointProvider = getEndpointProvider(busClassName);
+            ExchangeBus exchangeBus = getExchangeBus(busClassName);
+            exchangeBus.init(_serviceDomain, domainProps);
             BaseTransformerRegistry transformerRegistry = new BaseTransformerRegistry();
 
-            _serviceDomain = new DomainImpl(ROOT_DOMAIN, registry, endpointProvider, transformerRegistry);
+            _serviceDomain = new DomainImpl(ROOT_DOMAIN, registry, exchangeBus, transformerRegistry);
 
             _transformerRegistryLoader = new TransformerRegistryLoader(transformerRegistry);
             _transformerRegistryLoader.loadOOTBTransforms();
@@ -187,11 +193,11 @@ public abstract class AbstractDeployment {
     }
 
     /**
-     * Returns an instance of the EndpointProvider.
-     * @param providerClass class name of the endpointprovider implementation
+     * Returns an instance of ExchangeBus.
+     * @param providerClass class name of the ExchangeBus implementation
      * @return EndpointProvider
      */
-    private static ExchangeBus getEndpointProvider(final String providerClass) {
+    private static ExchangeBus getExchangeBus(final String providerClass) {
         ServiceLoader<ExchangeBus> providerServices
                 = ServiceLoader.load(ExchangeBus.class);
         

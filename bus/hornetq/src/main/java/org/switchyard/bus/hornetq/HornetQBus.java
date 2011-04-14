@@ -44,7 +44,6 @@ import org.switchyard.ServiceReference;
 import org.switchyard.handlers.HandlerChain;
 import org.switchyard.spi.Dispatcher;
 import org.switchyard.spi.ExchangeBus;
-import org.switchyard.transform.TransformerRegistry;
 
 /**
  * HornetQ provider implementation for ExchangeBus.  The provider uses a
@@ -115,7 +114,7 @@ public class HornetQBus implements ExchangeBus {
     /**
      * Start the bus provider.  This will start the underlying HornetQ server.
      */
-    private synchronized void start() {
+    private void start() {
         try {
             _server.start();
             Map<String, Object> sessionConfig = new HashMap<String, Object>();
@@ -133,7 +132,7 @@ public class HornetQBus implements ExchangeBus {
      * Stop the provider.  This will stop all created Dispatcher instances and
      * then the HornetQ server.
      */
-    private synchronized void stop() {
+    private void stop() {
         try {
             for (HornetQDispatcher ep : _dispatchers.values()) {
                 ep.stop();

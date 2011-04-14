@@ -39,6 +39,7 @@ import org.switchyard.Scope;
 import org.switchyard.ServiceReference;
 import org.switchyard.handlers.HandlerChain;
 import org.switchyard.internal.DefaultHandlerChain;
+import org.switchyard.internal.DomainImpl;
 import org.switchyard.internal.ExchangeImpl;
 import org.switchyard.metadata.ExchangeContract;
 import org.switchyard.metadata.InOnlyService;
@@ -47,19 +48,21 @@ import org.switchyard.spi.Dispatcher;
 
 public class HornetQDispatcherTest {
 
+    private DomainImpl _domain;
     private HornetQBus _provider;
 
     @Before
     public void setUp() throws Exception {
-        Map<String, Object> config = new HashMap<String, Object>();
+        Map<String, String> config = new HashMap<String, String>();
         config.put(HornetQBus.WORK_DIR, "target/hornetQ");
-        _provider = new HornetQBus(config);
-        _provider.start();
+        _domain = new DomainImpl(new QName("hornetQ"), null, null, null);
+        _provider = new HornetQBus();
+        _provider.init(_domain, config);
     }
     
     @After
     public void tearDown() throws Exception {
-        _provider.stop();
+        _provider.destroy();
     }
     
     @Test
@@ -69,7 +72,7 @@ public class HornetQDispatcherTest {
         HandlerChain inHandlers = new DefaultHandlerChain();
         ExchangeSink sink = new ExchangeSink();
         inHandlers.addLast("in", sink);
-        Dispatcher dispatch = _provider.createDispatcher(service, inHandlers, null);
+        Dispatcher dispatch = _provider.createDispatcher(service, inHandlers);
         
         Exchange exchange = new ExchangeImpl(service.getName(), ExchangeContract.IN_ONLY, dispatch, null, null);
         exchange.send(exchange.createMessage());
@@ -90,7 +93,7 @@ public class HornetQDispatcherTest {
         ExchangeSink inHandler = new ExchangeSink(true);
         inHandlers.addLast("in", inHandler);
         // consumer handlers
-        Dispatcher dispatch = _provider.createDispatcher(service, inHandlers, null);
+        Dispatcher dispatch = _provider.createDispatcher(service, inHandlers);
         HandlerChain outHandlers = new DefaultHandlerChain();
         ExchangeSink outHandler = new ExchangeSink();
         outHandlers.addLast("out", outHandler);

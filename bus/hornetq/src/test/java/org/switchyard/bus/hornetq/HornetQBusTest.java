@@ -31,30 +31,30 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.switchyard.Exchange;
 import org.switchyard.ServiceReference;
 import org.switchyard.internal.DefaultHandlerChain;
-import org.switchyard.internal.ExchangeImpl;
-import org.switchyard.metadata.ExchangeContract;
+import org.switchyard.internal.DomainImpl;
 import org.switchyard.metadata.InOnlyService;
 import org.switchyard.metadata.InOutService;
 import org.switchyard.spi.Dispatcher;
 
 public class HornetQBusTest {
 
+    private DomainImpl _domain;
     private HornetQBus _provider;
 
     @Before
     public void setUp() throws Exception {
         Map<String, String> config = new HashMap<String, String>();
         config.put(HornetQBus.WORK_DIR, "target/hornetQ");
+        _domain = new DomainImpl(new QName("hornetQ"), null, null, null);
         _provider = new HornetQBus();
-        _provider.init(null, config);
+        _provider.init(_domain, config);
     }
     
     @After
     public void tearDown() throws Exception {
-        _provider.stop();
+        _provider.destroy();
     }
     
     @Test
@@ -62,30 +62,30 @@ public class HornetQBusTest {
         // verify that dispatchers can be created for an InOnly service
         _provider.createDispatcher(
                 new MockServiceReference(new QName("inOnly"), new InOnlyService()), 
-                new DefaultHandlerChain(), null);
+                new DefaultHandlerChain());
 
         // verify that dispatchers can be created for an InOut service
         _provider.createDispatcher(
                 new MockServiceReference(new QName("inOut"), new InOutService()), 
-                new DefaultHandlerChain(), null);
+                new DefaultHandlerChain());
     }
     
     @Test
     public void testGetDispatcher() throws Exception {
         ServiceReference service = new MockServiceReference(new QName("testGetDispatcher"));
-        Dispatcher dispatch = _provider.createDispatcher(service, new DefaultHandlerChain(), null);
+        Dispatcher dispatch = _provider.createDispatcher(service, new DefaultHandlerChain());
         
         Assert.assertEquals(dispatch, _provider.getDispatcher(service));
     }
     
     @Test
     public void testUseExistingHornetQConfig() throws Exception {
-        Map<String, Object> config = new HashMap<String, Object>();
+        Map<String, String> config = new HashMap<String, String>();
         config.put(HornetQBus.WORK_DIR, "target/configTest");
         config.put(HornetQBus.CONFIG_PATH, "configTest/hornetq-configuration.xml");
         config.put(HornetQBus.SERVER_ID, "1");
-        HornetQBus bus = new HornetQBus(config);
-        bus.start();
-        bus.stop();
+        HornetQBus bus = new HornetQBus();
+        bus.init(_domain, config);
+        bus.destroy();
     }
 }
