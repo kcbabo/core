@@ -32,6 +32,7 @@ import org.switchyard.config.model.composite.ComponentModel;
 import org.switchyard.config.model.composite.CompositeServiceModel;
 import org.switchyard.config.model.switchyard.SwitchYardModel;
 import org.switchyard.config.model.transform.TransformsModel;
+import org.switchyard.deploy.Activator;
 import org.switchyard.exception.SwitchYardException;
 import org.switchyard.metadata.ServiceInterface;
 import org.switchyard.metadata.java.JavaService;
@@ -126,7 +127,7 @@ public abstract class AbstractDeployment {
      * Initialise the deployment.
      * @param appServiceDomain The ServiceDomain for the application.
      */
-    public final void init(ServiceDomain appServiceDomain) {
+    public final void init(ServiceDomain appServiceDomain, List<Activator> activators) {
         if (appServiceDomain == null) {
             throw new IllegalArgumentException("null 'appServiceDomain' argument.");
         }
@@ -149,7 +150,7 @@ public abstract class AbstractDeployment {
             _transformerRegistryLoader = new TransformerRegistryLoader(appServiceDomain.getTransformerRegistry());
             _transformerRegistryLoader.loadOOTBTransforms();
             
-            doInit();
+            doInit(activators);
         } catch (RuntimeException e) {
             notifyListeners(new InitializationFailedNotifier(e));
             throw e;
@@ -236,7 +237,7 @@ public abstract class AbstractDeployment {
     /**
      * Notify the implementation to initialize itself.
      */
-    protected abstract void doInit();
+    protected abstract void doInit(List<Activator> activators);
 
     /**
      * Notify the implementation to start itself.
