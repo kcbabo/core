@@ -23,7 +23,6 @@ import java.util.List;
 
 import javax.xml.namespace.QName;
 
-import org.switchyard.metadata.ExchangeContract;
 import org.switchyard.metadata.ServiceInterface;
 import org.switchyard.policy.Policy;
 import org.switchyard.transform.TransformerRegistry;
@@ -46,43 +45,6 @@ public interface ServiceDomain {
     QName getName();
     
     /**
-    * Return a service instance bound to the specified name.
-    * @param serviceName name of the service
-    * @return service instance or null if no such service was found
-    */
-    ServiceReference getService(QName serviceName);
-
-    /**
-     * Creates a new Exchange to invoke service with the specified exchange
-     * pattern.
-     * @param service the service to invoke
-     * @param contract the exchange contract to use
-     * @return a new Exchange instance
-     */
-    Exchange createExchange(ServiceReference service, ExchangeContract contract);
-    /**
-     * Creates a new Exchange to invoke service with the specified exchange
-     * pattern.  The supplied ExchangeHandler is used to handle any faults or
-     * reply messages that are generated as part of the message exchange.
-     * @param service the service to invoke
-     * @param contract the exchange contract to use
-     * @param handler used to process response and fault messages
-     * @return a new Exchange instance
-     */
-    Exchange createExchange(ServiceReference service, ExchangeContract contract,
-            ExchangeHandler handler);
-
-    /**
-     * Register a service with the domain.
-     * @param serviceName the name of the service
-     * @param handler the handler to use to process exchanges directed at this
-     * service
-     * @return a reference to the registered service that can be used to
-     * unregister when required
-     */
-    ServiceReference registerService(QName serviceName, ExchangeHandler handler);
-
-    /**
      * Register a service with the domain.
      * @param serviceName the name of the service
      * @param handler the handler to use to process exchanges directed at this
@@ -91,9 +53,9 @@ public interface ServiceDomain {
      * @return a reference to the registered service that can be used to
      * unregister when required
      */
-    ServiceReference registerService(QName serviceName,
-            ExchangeHandler handler,
-            ServiceInterface metadata);
+    Service registerService(QName serviceName,
+            ServiceInterface metadata,
+            ExchangeHandler handler);
     
     /**
      * Register a service with the domain.
@@ -102,13 +64,37 @@ public interface ServiceDomain {
      * service
      * @param metadata service interface details
      * @param requires policy requirements for the service
+     */
+    Service registerService(QName serviceName,
+            ServiceInterface metadata,
+            ExchangeHandler handler,
+            List<Policy> requires);
+    
+    /**
+     * Register a service reference with the domain.
+     * @param serviceName the name of the reference
+     * @param handler the handler to use to process replies from the service
      * @return a reference to the registered service that can be used to
      * unregister when required
      */
-    ServiceReference registerService(QName serviceName,
-            ExchangeHandler handler,
+    ServiceReference createServiceReference(QName serviceName, ServiceInterface metadata);
+    
+    /**
+     * Register a service with the domain.
+     * @param serviceName the name of the service
+     * @param handler the handler to use to process exchanges directed at this
+     * service
+     * @param metadata service interface details
+     * @return a reference to the registered service that can be used to
+     * unregister when required
+     */
+    ServiceReference createServiceReference(QName serviceName,
             ServiceInterface metadata,
-            List<Policy> requires);
+            ExchangeHandler handler);
+    
+    
+    
+    void wireReference(ServiceReference reference, Service service);
 
     /**
      * Returns a references to the transformer registry for this domain.

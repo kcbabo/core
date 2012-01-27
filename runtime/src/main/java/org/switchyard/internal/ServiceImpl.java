@@ -21,26 +21,20 @@ package org.switchyard.internal;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import javax.xml.namespace.QName;
 
-import org.switchyard.Exchange;
-import org.switchyard.ExchangeHandler;
+import org.switchyard.Service;
 import org.switchyard.ServiceDomain;
-import org.switchyard.ServiceReference;
-import org.switchyard.exception.SwitchYardException;
 import org.switchyard.metadata.ServiceInterface;
-import org.switchyard.metadata.ServiceOperation;
-import org.switchyard.policy.ExchangePolicy;
 import org.switchyard.policy.Policy;
 
 /**
- * A reference to a service registered in a SwitchYard domain.  The reference
- * is a logical representation of a service endpoint, which can be mapped to
- * multiple service instances compatible with the service reference metadata.
+ * A service registered in a SwitchYard domain.  This is an instance of the 
+ * registered service itself and not a service reference (which is used to
+ * invoke a service).
  */
-public class ServiceReferenceImpl implements ServiceReference {
+public class ServiceImpl implements Service {
 
     private QName _name;
     private ServiceInterface _interface;
@@ -54,7 +48,7 @@ public class ServiceReferenceImpl implements ServiceReference {
      * @param requires list of policies required for this reference
      * @param domain domain in which the service is used 
      */
-    public ServiceReferenceImpl(QName name, 
+    public ServiceImpl(QName name, 
             ServiceInterface serviceInterface, 
             List<Policy> requires,
             DomainImpl domain) {
@@ -69,40 +63,6 @@ public class ServiceReferenceImpl implements ServiceReference {
             _requires = Collections.emptyList();
         }
     }
-    
-    @Override
-    public Exchange createExchange() {
-        Set<ServiceOperation> operations = _interface.getOperations();
-        if (operations.size() == 0) {
-            throw new SwitchYardException(
-                    "No operations in interface for service: " + _name);
-        } else if (operations.size() > 1) {
-            throw new SwitchYardException("Operation name required - "
-                    + "multiple operations on service interface: " + _name);
-        }
-        
-        return createExchange(operations.iterator().next().getName(), null);
-    }
-    
-    @Override
-    public Exchange createExchange(String operation) {
-        return createExchange(operation, null);
-    }
-
-    @Override
-    public Exchange createExchange(String operation, ExchangeHandler handler) {
-        ServiceOperation op = _interface.getOperation(operation);
-        if (op == null) {
-            throw new SwitchYardException("Invalid operation " + operation 
-                    + " for service " + _name);
-        } 
-        
-        Exchange ex = _domain.createExchange(this, op, handler);
-        for (Policy policy : _requires) {
-            ExchangePolicy.require(ex, policy);
-        }
-        return ex;
-    }
 
     @Override
     public ServiceInterface getInterface() {
@@ -114,12 +74,17 @@ public class ServiceReferenceImpl implements ServiceReference {
         return _name;
     }
     
-    /**
-     * The domain in which this service reference is registered.
-     * @return service domain which created this service reference
-     */
+    @Override
     public ServiceDomain getDomain() {
         return _domain;
+    }
+
+    /* (non-Javadoc)
+     * @see org.switchyard.Service#unregister()
+     */
+    @Override
+    public void unregister() {
+        _domain.getServiceRegistry().unregisterService(this);
     }
 
 }

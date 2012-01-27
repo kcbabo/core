@@ -19,10 +19,9 @@
 
 package org.switchyard;
 
-import org.switchyard.metadata.ExchangeContract;
-import org.switchyard.metadata.ServiceInterface;
-
 import javax.xml.namespace.QName;
+
+import org.switchyard.metadata.ServiceInterface;
 
 /**
  * A service registered with the SwitchYard runtime.
@@ -33,18 +32,29 @@ public interface ServiceReference {
      * @return service name
      */
     QName getName();
+    
     /**
     * Interface metadata for the registered service.
     * @return the service interface
     */
     ServiceInterface getInterface();
+    
     /**
      * Creates a new Exchange to invoke this service with the specified exchange
      * pattern.
      * @param contract the exchange contract to use
      * @return a new Exchange instance
      */
-    Exchange createExchange(ExchangeContract contract);
+    Exchange createExchange();
+    
+    /**
+     * Creates a new Exchange to invoke this service with the specified exchange
+     * pattern.
+     * @param contract the exchange contract to use
+     * @return a new Exchange instance
+     */
+    Exchange createExchange(String operation);
+    
     /**
      * Creates a new Exchange to invoke this service with the specified exchange
      * pattern.  The supplied ExchangeHandler is used to handle any faults or
@@ -53,5 +63,5 @@ public interface ServiceReference {
      * @param handler used to process response and fault messages
      * @return a new Exchange instance
      */
-    Exchange createExchange(ExchangeContract contract, ExchangeHandler handler);
+    Exchange createExchange(String operation, ExchangeHandler handler);
 }
