@@ -92,7 +92,19 @@ public interface ServiceDomain {
             ServiceInterface metadata,
             ExchangeHandler handler);
     
-    
+    /**
+     * Register a service with the domain.
+     * @param serviceName the name of the service
+     * @param handler the handler to use to process exchanges directed at this
+     * service
+     * @param metadata service interface details
+     * @return a reference to the registered service that can be used to
+     * unregister when required
+     */
+    ServiceReference createServiceReference(QName serviceName,
+            ServiceInterface metadata,
+            ExchangeHandler handler,
+            List<Policy> provides);
     
     void wireReference(ServiceReference reference, Service service);
 

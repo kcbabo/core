@@ -45,33 +45,40 @@ public class ServiceReferenceImpl implements ServiceReference {
     private QName _name;
     private ServiceInterface _interface;
     private DomainImpl _domain;
-    private List<Policy> _requires;
+    private List<Policy> _provides;
+    private ExchangeHandler _handler;
 
     /**
      * Creates a new reference to a service.
      * @param name name of the service reference
      * @param serviceInterface the service interface
-     * @param requires list of policies required for this reference
+     * @param provides list of policies provided by this reference
      * @param domain domain in which the service is used 
      */
     public ServiceReferenceImpl(QName name, 
             ServiceInterface serviceInterface, 
-            List<Policy> requires,
+            List<Policy> provides,
+            ExchangeHandler handler,
             DomainImpl domain) {
         
         _name = name;
         _interface = serviceInterface;
+        _handler = handler;
         _domain = domain;
         
-        if (requires != null) {
-            _requires = requires;
+        if (provides != null) {
+            _provides = provides;
         } else {
-            _requires = Collections.emptyList();
+            _provides = Collections.emptyList();
         }
     }
     
     @Override
     public Exchange createExchange() {
+        return createExchange(_handler);
+    }
+    @Override
+    public Exchange createExchange(ExchangeHandler handler) {
         Set<ServiceOperation> operations = _interface.getOperations();
         if (operations.size() == 0) {
             throw new SwitchYardException(
@@ -80,26 +87,25 @@ public class ServiceReferenceImpl implements ServiceReference {
             throw new SwitchYardException("Operation name required - "
                     + "multiple operations on service interface: " + _name);
         }
-        
-        return createExchange(operations.iterator().next().getName(), null);
+
+        return createExchange(operations.iterator().next().getName(), handler);
     }
     
     @Override
     public Exchange createExchange(String operation) {
-        return createExchange(operation, null);
+        return createExchange(operation, _handler);
     }
 
     @Override
     public Exchange createExchange(String operation, ExchangeHandler handler) {
-        ServiceOperation op = _interface.getOperation(operation);
-        if (op == null) {
+        if (_interface.getOperation(operation) == null) {
             throw new SwitchYardException("Invalid operation " + operation 
                     + " for service " + _name);
         } 
         
-        Exchange ex = _domain.createExchange(this, op, handler);
-        for (Policy policy : _requires) {
-            ExchangePolicy.require(ex, policy);
+        Exchange ex = _domain.createExchange(this, operation, handler);
+        for (Policy policy : _provides) {
+            ExchangePolicy.provide(ex, policy);
         }
         return ex;
     }
@@ -113,6 +119,12 @@ public class ServiceReferenceImpl implements ServiceReference {
     public QName getName() {
         return _name;
     }
+
+    @Override
+    public List<Policy> getProvidedPolicy() {
+        return Collections.unmodifiableList(_provides);
+    }
+
     
     /**
      * The domain in which this service reference is registered.

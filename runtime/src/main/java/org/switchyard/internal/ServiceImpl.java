@@ -86,5 +86,8 @@ public class ServiceImpl implements Service {
     public void unregister() {
         _domain.getServiceRegistry().unregisterService(this);
     }
-
+    
+    public List<Policy> getRequiredPolicy() {
+        return Collections.unmodifiableList(_requires);
+    }
 }

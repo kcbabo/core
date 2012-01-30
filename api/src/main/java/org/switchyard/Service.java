@@ -19,9 +19,12 @@
 
 package org.switchyard;
 
+import java.util.List;
+
 import javax.xml.namespace.QName;
 
 import org.switchyard.metadata.ServiceInterface;
+import org.switchyard.policy.Policy;
 
 /**
  * A service registered with the SwitchYard runtime.
@@ -49,4 +52,10 @@ public interface Service {
      * @return service domain which created this service reference
      */
      ServiceDomain getDomain();
+     
+     /**
+      * Returns a list of required policies for this service.
+      * @return list of required policy
+      */
+      List<Policy> getRequiredPolicy();
 }
