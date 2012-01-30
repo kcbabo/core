@@ -17,47 +17,40 @@
  * MA  02110-1301, USA.
  */
 
-package org.switchyard.handlers;
+package org.switchyard.internal;
 
 import javax.xml.namespace.QName;
 
+import junit.framework.Assert;
+
 import org.junit.Before;
 import org.junit.Test;
-import org.switchyard.Exchange;
 import org.switchyard.MockDomain;
 import org.switchyard.MockHandler;
-import org.switchyard.ServiceReference;
+import org.switchyard.Service;
+import org.switchyard.metadata.InOnlyService;
 
-public class MessageTraceTest {
-
+/**
+ *  Unit tests for the ServiceImpl class.
+ */
+public class ServiceImplTest {
+     
     private MockDomain _domain;
     
     @Before
     public void setUp() throws Exception {
         _domain = new MockDomain();
-        _domain.getHandlerChain().addFirst("trace", new MessageTrace());
     }
     
     @Test
-    public void testInMessageTrace() {
-        ServiceReference service = _domain.createInOnlyService(new QName("InTrace"));
-        Exchange exchange = service.createExchange();
-        exchange.send(exchange.createMessage());
+    public void testUnregister() {
+        Service service = _domain.registerService(new QName("TestService"), 
+                new InOnlyService(), new MockHandler());
+        // test that it was added to the registry
+        Assert.assertEquals(1, _domain.getServiceRegistry().getServices().size());
+        service.unregister();
+        // confirm that it was removed
+        Assert.assertEquals(0, _domain.getServiceRegistry().getServices().size());
     }
     
-    @Test
-    public void testInOutMessageTrace() throws Exception {
-        ServiceReference service = _domain.createInOutService(
-                new QName("InOutTrace"), new MockHandler().forwardInToOut());
-        Exchange exchange = service.createExchange(new MockHandler());
-        exchange.send(exchange.createMessage());
-    }
-
-    @Test
-    public void testInFaultMessageTrace() throws Exception {
-        ServiceReference service = _domain.createInOutService(
-                new QName("InFaultTrace"), new MockHandler().forwardInToOut());
-        Exchange exchange = service.createExchange(new MockHandler());
-        exchange.send(exchange.createMessage());
-    }
 }

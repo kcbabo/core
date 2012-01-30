@@ -37,7 +37,6 @@ import org.switchyard.ExchangeState;
 import org.switchyard.Message;
 import org.switchyard.MockDomain;
 import org.switchyard.MockHandler;
-import org.switchyard.ServiceDomain;
 import org.switchyard.ServiceReference;
 import org.switchyard.internal.DefaultContext;
 import org.switchyard.internal.DefaultMessage;
@@ -100,10 +99,10 @@ public final class ExchangeSerializationTests {
     }
 
     private ExchangeImpl buildExchange() {
-        ServiceDomain domain = new MockDomain();
+        MockDomain domain = new MockDomain();
         MockHandler handler = new MockHandler();
-        ServiceReference service = domain.registerService(new QName("InPhase"), handler);
-        ExchangeImpl exchange = (ExchangeImpl)domain.createExchange(service, ExchangeContract.IN_ONLY, handler);
+        ServiceReference service = domain.createInOutService(new QName("InPhase"), handler);
+        ExchangeImpl exchange = (ExchangeImpl)service.createExchange(handler);
         buildContext((DefaultContext)exchange.getContext());
         DefaultMessage msg = buildMessage((DefaultMessage)exchange.createMessage());
         exchange.send(msg);

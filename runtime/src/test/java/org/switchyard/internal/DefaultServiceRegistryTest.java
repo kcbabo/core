@@ -52,7 +52,7 @@ public class DefaultServiceRegistryTest
         ServiceImpl service = new ServiceImpl(serviceName, null, null, null);
         registry.registerService(service, null, null);
         Assert.assertTrue(registry.getServices(serviceName).size() > 0);
-        service.unregister();
+        registry.unregisterService(service);
         Assert.assertTrue(registry.getServices(serviceName).size() == 0);
     }
 
