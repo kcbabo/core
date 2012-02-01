@@ -46,7 +46,7 @@ public class MockDomain extends DomainImpl {
     public ServiceReference createInOnlyService(QName serviceName) {
         ServiceInterface inOnly = new InOnlyService();
         registerService(serviceName, inOnly, new MockHandler());
-        ServiceReference reference = createServiceReference(serviceName, inOnly);
+        ServiceReference reference = registerServiceReference(serviceName, inOnly);
         return reference;
     }
     
@@ -54,21 +54,21 @@ public class MockDomain extends DomainImpl {
     public ServiceReference createInOnlyService(QName serviceName, ExchangeHandler handler) {
         ServiceInterface inOnly = new InOnlyService();
         registerService(serviceName, inOnly, handler);
-        ServiceReference reference = createServiceReference(serviceName, inOnly);
+        ServiceReference reference = registerServiceReference(serviceName, inOnly);
         return reference;
     }
 
     public ServiceReference createInOutService(QName serviceName) {
         ServiceInterface inOut = new InOutService();
         registerService(serviceName, inOut, new MockHandler());
-        ServiceReference reference = createServiceReference(serviceName, inOut);
+        ServiceReference reference = registerServiceReference(serviceName, inOut);
         return reference;
     }
 
     public ServiceReference createInOutService(QName serviceName, ExchangeHandler handler) {
         ServiceInterface inOut = new InOutService();
         registerService(serviceName, inOut, handler);
-        ServiceReference reference = createServiceReference(serviceName, inOut);
+        ServiceReference reference = registerServiceReference(serviceName, inOut);
         return reference;
     }
 }

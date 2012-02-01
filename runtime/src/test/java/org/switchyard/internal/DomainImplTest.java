@@ -29,6 +29,7 @@ import org.switchyard.BaseHandler;
 import org.switchyard.Exchange;
 import org.switchyard.ExchangePattern;
 import org.switchyard.HandlerException;
+import org.switchyard.MockDomain;
 import org.switchyard.MockHandler;
 import org.switchyard.Service;
 import org.switchyard.ServiceReference;
@@ -57,8 +58,8 @@ public class DomainImplTest {
                 null);
         _domain.registerService(IN_ONLY_SERVICE, new InOnlyService(), new MockHandler());
         _domain.registerService(IN_OUT_SERVICE, new InOutService(), new MockHandler());
-        _inOnlyReference = _domain.createServiceReference(IN_ONLY_SERVICE, new InOnlyService());
-        _inOutReference = _domain.createServiceReference(IN_OUT_SERVICE, new InOutService());
+        _inOnlyReference = _domain.registerServiceReference(IN_ONLY_SERVICE, new InOnlyService());
+        _inOutReference = _domain.registerServiceReference(IN_OUT_SERVICE, new InOutService());
     }
     
     @Test
@@ -92,12 +93,16 @@ public class DomainImplTest {
     
     @Test
     public void testDomainHandler() throws Exception {
+        MockDomain testDomain = new MockDomain();
         // Add a domain-level handler
         CountingHandler counter = new CountingHandler();
-        _domain.getHandlerChain().addFirst("counter", counter);
+        testDomain.getHandlerChain().addFirst("counter", counter);
+        ServiceReference inOnly = testDomain.createInOnlyService(new QName("CountIn"));
+        ServiceReference inOut = testDomain.createInOutService(
+                new QName("CountInOut"), new MockHandler().forwardInToOut());
         
         // Verify counter is called once for in-only exchange
-        Exchange ex1 = _inOnlyReference.createExchange();
+        Exchange ex1 = inOnly.createExchange();
         ex1.send(new DefaultMessage());
         Assert.assertEquals(1, counter.getCount());
         
@@ -105,7 +110,7 @@ public class DomainImplTest {
         counter.clear();
         
         // Verify counter is called twice for in-out exchange
-        Exchange ex2 = _inOutReference.createExchange(new MockHandler().forwardInToOut());
+        Exchange ex2 = inOut.createExchange(new MockHandler());
         ex2.send(new DefaultMessage().setContent("hello"));
         Assert.assertEquals(2, counter.getCount());
     }

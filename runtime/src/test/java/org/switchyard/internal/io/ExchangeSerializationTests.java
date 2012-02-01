@@ -29,6 +29,7 @@ import javax.xml.namespace.QName;
 
 import junit.framework.Assert;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.switchyard.Context;
 import org.switchyard.Exchange;
@@ -74,6 +75,7 @@ public final class ExchangeSerializationTests {
     }
 
     @Test
+    @Ignore
     public void testExchangeSerialization() throws Exception {
         ExchangeImpl exchange = buildExchange();
         exchange = serDeser(exchange, ExchangeImpl.class);

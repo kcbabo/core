@@ -21,6 +21,8 @@ package org.switchyard.internal;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.namespace.QName;
 
@@ -62,6 +64,7 @@ public class DomainImpl implements ServiceDomain {
     private final ExchangeBus _exchangeBus;
     private final TransformerRegistry _transformerRegistry;
     private final ValidatorRegistry _validatorRegistry;
+    private final Map<QName, ServiceReference> _references;
 
     /**
      * Constructor.
@@ -82,6 +85,7 @@ public class DomainImpl implements ServiceDomain {
         _exchangeBus  = exchangeBus;
         _transformerRegistry = transformerRegistry;
         _validatorRegistry = validatorRegistry;
+        _references = new ConcurrentHashMap<QName, ServiceReference>();
 
         // Build out the system handlers chain.  A null "provider" handler
         // is inserted as a placeholder to establish the correct position of
@@ -129,21 +133,32 @@ public class DomainImpl implements ServiceDomain {
     }
 
     @Override
-    public ServiceReference createServiceReference(QName serviceName,
+    public ServiceReference registerServiceReference(QName serviceName,
             ServiceInterface metadata) {
-        return new ServiceReferenceImpl(serviceName, metadata, null, null, this);
+        return registerServiceReference(serviceName, metadata, null, null);
     }
 
     @Override
-    public ServiceReference createServiceReference(QName serviceName,
+    public ServiceReference registerServiceReference(QName serviceName,
             ServiceInterface metadata, ExchangeHandler handler) {
-        return new ServiceReferenceImpl(serviceName, metadata, null, handler, this);
+        return registerServiceReference(serviceName, metadata, handler, null);
     }
     
     @Override
-    public ServiceReference createServiceReference(QName serviceName,
+    public ServiceReference registerServiceReference(QName serviceName,
             ServiceInterface metadata, ExchangeHandler handler, List<Policy> provides) {
-        return new ServiceReferenceImpl(serviceName, metadata, provides, handler, this);
+        ServiceReference reference = new ServiceReferenceImpl(serviceName, metadata, provides, handler, this);
+        _references.put(serviceName, reference);
+        return reference;
+    }
+    
+    @Override
+    public ServiceReference getServiceReference(QName serviceName) {
+        return _references.get(serviceName);
+    }
+    
+    public void unregisterServiceReference(ServiceReference reference) {
+        _references.remove(reference.getName());
     }
 
     @Override

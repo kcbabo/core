@@ -20,14 +20,9 @@
 
 package org.switchyard.deploy;
 
-import javax.xml.namespace.QName;
-
 import junit.framework.Assert;
 
 import org.junit.Test;
-import org.switchyard.ExchangeHandler;
-import org.switchyard.ServiceReference;
-import org.switchyard.config.model.Model;
 
 public class BaseActivatorTest {
 
@@ -60,23 +55,6 @@ class SimpleActivator extends BaseActivator {
     
     SimpleActivator(String ... types) {
         super(types);
-    }
-
-    @Override
-    public void destroy(ServiceReference service) {
-    }
-
-    @Override
-    public ExchangeHandler init(QName name, Model config) {
-        return null;
-    }
-
-    @Override
-    public void start(ServiceReference service) {        
-    }
-
-    @Override
-    public void stop(ServiceReference service) {        
     }
     
 }

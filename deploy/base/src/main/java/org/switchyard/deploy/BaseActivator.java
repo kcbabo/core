@@ -26,6 +26,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.switchyard.ServiceDomain;
+import org.switchyard.config.model.composite.BindingModel;
+import org.switchyard.config.model.composite.ComponentModel;
 
 /**
  * Base implementation of Activator which provides a convenience implementation
@@ -41,6 +43,19 @@ public abstract class BaseActivator implements Activator {
             _activationTypes.addAll(Arrays.asList(types));
         }
     }
+
+    @Override
+    public ServiceHandler activateBinding(BindingModel config) {
+        throw new UnsupportedOperationException(
+                "activateBinding() not supported by " + getClass());
+    }
+
+    @Override
+    public ServiceHandler activateImplementation(ComponentModel config) {
+        throw new UnsupportedOperationException(
+                "activateImplementation() not supported by " + getClass());
+    }
+    
     
     /**
      * Sets the service domain instance of this activator.

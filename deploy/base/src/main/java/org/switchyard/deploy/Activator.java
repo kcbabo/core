@@ -21,11 +21,8 @@ package org.switchyard.deploy;
 
 import java.util.Collection;
 
-import javax.xml.namespace.QName;
-
-import org.switchyard.ExchangeHandler;
-import org.switchyard.ServiceReference;
-import org.switchyard.config.model.Model;
+import org.switchyard.config.model.composite.BindingModel;
+import org.switchyard.config.model.composite.ComponentModel;
 
 /**
  * Activators allow components to participate in the deployment lifecycle of
@@ -37,37 +34,12 @@ import org.switchyard.config.model.Model;
  * in the appropriate order.
  */
 public interface Activator {
+    
+    ServiceHandler activateBinding(BindingModel config);
+    ServiceHandler activateImplementation(ComponentModel config);
+    
     /**
-     * Initialize a service or service reference based on the supplied
-     * configuration.  Activator instances should attempt to validate 
-     * configuration, policy, and any runtime constraints during init and fail
-     * fast if there is a problem.
-     * @param name name of the service or reference
-     * @param config switchyard configuration for the service or reference
-     * @return exchange handler to use for the service or reference.  In the case
-     * of a reference, the handler will be used as the default callback handler
-     * for all exchanges.
-     */
-    ExchangeHandler init(QName name, Model config);
-    /**
-     * Start the specified service or reference.
-     * @param service service to start
-     */
-    void start(ServiceReference service);
-    /**
-     * Stop the specified service or reference.
-     * @param service service to stop
-     */
-    void stop(ServiceReference service);
-    /**
-     * Destroy the specified service or reference.  Once destroyed, the activator
-     * should be capable of launching a clean instance of this service or 
-     * reference through an init() call (e.g. application redeployment).
-     * @param service service to destroy
-     */
-    void destroy(ServiceReference service);
-    /**
-     * An Activator can handle activation of certain types.
+     * Whether the activator can handle a given .
      * @param type activation type
      * @return true If this Activator can activate the passed-in type.
      */

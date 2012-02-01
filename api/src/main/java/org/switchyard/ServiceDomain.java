@@ -77,7 +77,7 @@ public interface ServiceDomain {
      * @return a reference to the registered service that can be used to
      * unregister when required
      */
-    ServiceReference createServiceReference(QName serviceName, ServiceInterface metadata);
+    ServiceReference registerServiceReference(QName serviceName, ServiceInterface metadata);
     
     /**
      * Register a service with the domain.
@@ -88,7 +88,7 @@ public interface ServiceDomain {
      * @return a reference to the registered service that can be used to
      * unregister when required
      */
-    ServiceReference createServiceReference(QName serviceName,
+    ServiceReference registerServiceReference(QName serviceName,
             ServiceInterface metadata,
             ExchangeHandler handler);
     
@@ -101,10 +101,12 @@ public interface ServiceDomain {
      * @return a reference to the registered service that can be used to
      * unregister when required
      */
-    ServiceReference createServiceReference(QName serviceName,
+    ServiceReference registerServiceReference(QName serviceName,
             ServiceInterface metadata,
             ExchangeHandler handler,
             List<Policy> provides);
+    
+    ServiceReference getServiceReference(QName serviceName);
     
     void wireReference(ServiceReference reference, Service service);
 
