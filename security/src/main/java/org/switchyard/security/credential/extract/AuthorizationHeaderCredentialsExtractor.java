@@ -51,7 +51,7 @@ public class AuthorizationHeaderCredentialsExtractor implements CredentialsExtra
         if (source != null) {
             if (source.startsWith("Basic ")) {
                 String encoded = source.substring(6, source.length());
-                String decoded = Base64.decode(encoded);
+                String decoded = new String(Base64.decode(encoded));
                 if (decoded.indexOf(':') != -1) {
                     String[] split = decoded.split(":", 2);
                     String name = split.length > 0 ? split[0] : null;

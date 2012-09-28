@@ -33,7 +33,7 @@ public class Base64Tests {
     public void testEncodeDecode() throws Exception {
         final String expected = "test";
         final String encoded = Base64.encode(expected);
-        final String decoded = Base64.decode(encoded);
+        final String decoded = new String(Base64.decode(encoded));
         Assert.assertEquals(expected, decoded);
     }
 

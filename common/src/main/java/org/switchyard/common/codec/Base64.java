@@ -35,14 +35,23 @@ public final class Base64 {
     public static final String encode(String value) {
         return DatatypeConverter.printBase64Binary(value.getBytes());
     }
-
+    
+    /**
+     * Encodes a String value to a Base64-encoded String.
+     * @param value the byte[] value
+     * @return the Base64-encoded String
+     */
+    public static final String encode(byte[] value) {
+        return DatatypeConverter.printBase64Binary(value);
+    }
+    
     /**
      * Decodes a Base64-encoded String to a decoded value.
      * @param encoded the Base64-encoded String
      * @return the decoded value
      */
-    public static final String decode(String encoded) {
-        return new String(DatatypeConverter.parseBase64Binary(encoded));
+    public static final byte[] decode(String encoded) {
+        return DatatypeConverter.parseBase64Binary(encoded);
     }
 
     private Base64() {}

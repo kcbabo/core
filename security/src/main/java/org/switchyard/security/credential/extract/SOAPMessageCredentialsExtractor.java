@@ -112,7 +112,7 @@ public class SOAPMessageCredentialsExtractor implements CredentialsExtractor<SOA
                                 String certString = XMLHelper.valueOf(securityTokenNode.getFirstChild());
                                 byte[] keyBytes = null;
                                 if ("Base64Binary".equalsIgnoreCase(encodingType)) {
-                                    keyBytes = Base64.decode(certString).getBytes();
+                                    keyBytes = Base64.decode(certString);
                                 } else {
                                     keyBytes = certString.getBytes();
                                 }
