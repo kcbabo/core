@@ -114,6 +114,8 @@ public class SwitchYardTestKit {
         new LinkedHashMap<Class<? extends TestMixIn>, MixInEntry>();
 
     private List<Activator> _activators;
+    
+    private boolean _replaceServices;
 
     /**
      * Public default constructor.
@@ -226,6 +228,16 @@ public class SwitchYardTestKit {
      */
     public List<Activator> getActivators() {
         return _activators;
+    }
+    
+    /**
+     * Specifies whether existing service registrations (e.g. reference bindings) should be 
+     * replaced by the service registration methods in this class.  Default is false.
+     * @param replace true to replace existing services, false to register another instance of 
+     * the service.
+     */
+    public void replaceExistingServices(boolean replace) {
+        _replaceServices = replace;
     }
 
     /**
@@ -342,6 +354,9 @@ public class SwitchYardTestKit {
      * @return The {@link MockHandler} service handler.
      */
     public MockHandler registerInOutService(String serviceName) {
+        if (_replaceServices) {
+            removeService(serviceName);
+        }
         MockHandler handler = new MockHandler();
         getServiceDomain().registerService(createQName(serviceName), new InOutService(), handler);
         return handler;
@@ -354,6 +369,9 @@ public class SwitchYardTestKit {
      * @param serviceHandler The service handler.
      */
     public void registerInOutService(String serviceName, ExchangeHandler serviceHandler) {
+        if (_replaceServices) {
+            removeService(serviceName);
+        }
         getServiceDomain().registerService(createQName(serviceName), new InOutService(), serviceHandler);
     }
 
@@ -365,6 +383,9 @@ public class SwitchYardTestKit {
      * @param metadata Service interface.
      */
     public void registerInOutService(String serviceName, ExchangeHandler serviceHandler, ServiceInterface metadata) {
+        if (_replaceServices) {
+            removeService(serviceName);
+        }
         getServiceDomain().registerService(createQName(serviceName), metadata, serviceHandler);
     }
 
@@ -377,6 +398,9 @@ public class SwitchYardTestKit {
      * @return The {@link MockHandler} service fault handler.
      */
     public MockHandler registerInOnlyService(String serviceName) {
+        if (_replaceServices) {
+            removeService(serviceName);
+        }
         MockHandler handler = new MockHandler();
         getServiceDomain().registerService(createQName(serviceName), new InOnlyService(), handler);
         return handler;
@@ -389,6 +413,9 @@ public class SwitchYardTestKit {
      * @param serviceHandler The service handler.
      */
     public void registerInOnlyService(String serviceName, ExchangeHandler serviceHandler) {
+        if (_replaceServices) {
+            removeService(serviceName);
+        }
         getServiceDomain().registerService(createQName(serviceName), new InOnlyService(), serviceHandler);
     }
     
