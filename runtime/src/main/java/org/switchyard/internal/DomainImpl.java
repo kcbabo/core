@@ -26,7 +26,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.namespace.QName;
 
@@ -41,7 +40,6 @@ import org.switchyard.event.DomainStartupEvent;
 import org.switchyard.event.EventObserver;
 import org.switchyard.event.EventPublisher;
 import org.switchyard.event.ReferenceRegistrationEvent;
-import org.switchyard.event.ReferenceUnregistrationEvent;
 import org.switchyard.event.ServiceRegistrationEvent;
 import org.switchyard.internal.transform.BaseTransformerRegistry;
 import org.switchyard.internal.validate.BaseValidatorRegistry;
@@ -71,8 +69,6 @@ public class DomainImpl implements ServiceDomain {
     private ValidatorRegistry _validatorRegistry;
     private List<ExchangeHandler> _userHandlers = new LinkedList<ExchangeHandler>();
     private Map<String, Object> _attachements = Collections.synchronizedMap(new LinkedHashMap<String, Object>());
-    private Map<QName, ServiceReference> _references =
-            new ConcurrentHashMap<QName, ServiceReference>();
     
     /**
      * Create a new ServiceDomain.
@@ -170,7 +166,7 @@ public class DomainImpl implements ServiceDomain {
         ServiceReferenceImpl reference = new ServiceReferenceImpl(serviceName, metadata, this, provides, requires, handler, owner);
         Dispatcher dispatch = _exchangeBus.createDispatcher(reference);
         reference.setDispatcher(dispatch);
-        _references.put(serviceName, reference);
+        _registry.registerServiceReference(reference);
         _eventManager.publish(new ReferenceRegistrationEvent(reference));
         
         return reference;
@@ -178,18 +174,9 @@ public class DomainImpl implements ServiceDomain {
     
     @Override
     public ServiceReference getServiceReference(QName serviceName) {
-        return _references.get(serviceName);
+        return _registry.getServiceReference(serviceName);
     }
     
-    /**
-     * Unregisters a service reference from the domain.
-     * @param reference the reference to unregister
-     */
-    public void unregisterServiceReference(ServiceReference reference) {
-        _references.remove(reference.getName());
-        _eventManager.publish(new ReferenceUnregistrationEvent(reference));
-    }
-
     @Override
     public QName getName() {
         return _name;
@@ -241,7 +228,6 @@ public class DomainImpl implements ServiceDomain {
     public void destroy() {
         _exchangeBus.stop();
         _eventManager.publish(new DomainShutdownEvent(this));
-        _references.clear();
     }
 
     @Override
