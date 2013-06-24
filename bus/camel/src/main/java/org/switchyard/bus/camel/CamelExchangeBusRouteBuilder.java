@@ -35,6 +35,7 @@ import java.util.Map.Entry;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Predicate;
+import org.apache.camel.Processor;
 import org.apache.camel.builder.ErrorHandlerBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.ExpressionNode;
@@ -48,6 +49,7 @@ import org.switchyard.bus.camel.audit.FaultInterceptStrategy;
 import org.switchyard.common.camel.SwitchYardCamelContext;
 import org.switchyard.exception.SwitchYardException;
 import org.switchyard.metadata.ServiceOperation;
+import org.switchyard.metadata.qos.Throttling;
 
 /**
  * Route builder which creates mediation necessary to handle communication inside SwitchYard.
@@ -63,6 +65,17 @@ public class CamelExchangeBusRouteBuilder extends RouteBuilder {
 
         public String toString() {
             return "IN_OUT_CHECK";
+        }
+    };
+    
+    private static final Predicate THROTTLE_CHECK = new Predicate() {
+        @Override
+        public boolean matches(Exchange exchange) {
+            return exchange.getIn().getHeader(Throttling.MAX_REQUESTS) != null;
+        }
+
+        public String toString() {
+            return "THROTTLE_CHECK";
         }
     };
 
@@ -118,6 +131,8 @@ public class CamelExchangeBusRouteBuilder extends RouteBuilder {
         // definition.onException(Throwable.class).processRef(FATAL_ERROR.name());
 
         TryDefinition tryDefinition = definition.doTry();
+        addThrottling(tryDefinition);
+        
         tryDefinition
             .processRef(DOMAIN_HANDLERS.name())
             .processRef(ADDRESSING.name())
@@ -159,5 +174,16 @@ public class CamelExchangeBusRouteBuilder extends RouteBuilder {
             return Collections.emptyMap();
         }
         return result;
+    }
+    
+    private void addThrottling(TryDefinition route) {
+        route.filter(THROTTLE_CHECK)
+            .throttle(header(Throttling.MAX_REQUESTS))
+            .process(new Processor() {
+                public void process(Exchange exchange) throws Exception {
+                    // NOP
+                }
+            })
+            .end().end();
     }
 }

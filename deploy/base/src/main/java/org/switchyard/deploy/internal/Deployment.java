@@ -33,6 +33,7 @@ import javax.xml.namespace.QName;
 
 import org.apache.log4j.Logger;
 import org.switchyard.Service;
+import org.switchyard.ServiceMetadata;
 import org.switchyard.ServiceReference;
 import org.switchyard.common.type.Classes;
 import org.switchyard.config.model.ModelPuller;
@@ -59,12 +60,12 @@ import org.switchyard.deploy.event.ApplicationUndeployedEvent;
 import org.switchyard.exception.SwitchYardException;
 import org.switchyard.extensions.wsdl.WSDLReaderException;
 import org.switchyard.extensions.wsdl.WSDLService;
-import org.switchyard.internal.ServiceReferenceImpl;
 import org.switchyard.metadata.InOnlyOperation;
 import org.switchyard.metadata.InOnlyService;
 import org.switchyard.metadata.InOutOperation;
 import org.switchyard.metadata.InOutService;
 import org.switchyard.metadata.ServiceInterface;
+import org.switchyard.metadata.ServiceMetadataBuilder;
 import org.switchyard.metadata.java.JavaService;
 import org.switchyard.policy.Policy;
 import org.switchyard.policy.Policy.PolicyType;
@@ -300,7 +301,8 @@ public class Deployment extends AbstractDeployment {
                 ServiceInterface si = getCompositeReferenceInterface(reference);
                 Binding bindingMetadata = new Binding(binding);
                 validateServiceRegistration(refQName);
-                Service svc = getDomain().registerService(refQName, si, handler, null, null, bindingMetadata);
+                ServiceMetadata metadata = ServiceMetadataBuilder.create().registrant(bindingMetadata).build();
+                Service svc = getDomain().registerService(refQName, si, handler, metadata);
                 activation.addService(svc);
                 _referenceBindings.add(activation);
 
@@ -447,8 +449,12 @@ public class Deployment extends AbstractDeployment {
                 validatePolicy(requires, requiresImpl);
 
                 ServiceInterface refIntf = getComponentReferenceInterface(reference);
+                ServiceMetadata metadata = ServiceMetadataBuilder.create()
+                        .security(getDomain().getServiceSecurity(reference.getSecurity()))
+                        .registrant(impl)
+                        .build();
                 ServiceReference svcRef = getDomain().registerServiceReference(
-                        reference.getQName(), refIntf, null, null, requires, reference.getSecurity(), impl);
+                        reference.getQName(), refIntf, null, metadata);
 
                 // wire a reference if the name is different from promoted name
                 for (CompositeReferenceModel compositeReference : getConfig().getComposite().getReferences()) {
@@ -484,8 +490,13 @@ public class Deployment extends AbstractDeployment {
                 ServiceHandler handler = activator.activateService(service.getQName(), component);
                 Activation activation = new Activation(activator, service.getQName(), null, handler);
                 ServiceInterface serviceIntf = getComponentServiceInterface(service);
-
-                Service svc = getDomain().registerService(service.getQName(), serviceIntf, handler, requires, service.getSecurity(), impl);
+                ServiceMetadata metadata = ServiceMetadataBuilder.create()
+                        .security(getDomain().getServiceSecurity(service.getSecurity()))
+                        .requiredPolicies(requires)
+                        .registrant(impl)
+                        .build();
+                
+                Service svc = getDomain().registerService(service.getQName(), serviceIntf, handler, metadata);
                 activation.addService(svc);
                 activation.addReferences(references);
                 
@@ -540,7 +551,8 @@ public class Deployment extends AbstractDeployment {
 
                 // Hack to set consumer metadata on reference
                 Binding bindingMetadata = new Binding(binding);
-                ((ServiceReferenceImpl)reference).setConsumerMetadata(bindingMetadata);
+                ServiceMetadataBuilder.update(reference.getServiceMetadata())
+                    .registrant(bindingMetadata);
                 
                 ServiceHandler handler = activator.activateBinding(service.getQName(), binding);
                 Activation activation = new Activation(activator, service.getQName(), binding, handler);

@@ -82,19 +82,19 @@ public class CamelExchangeBusTest {
     public void testCreateDispatcher() throws Exception {
         // verify that dispatchers can be created for an InOnly service
         ServiceReference inOnly = new ServiceReferenceImpl(
-            new QName("inOnly"), new InOnlyService(), _domain);
+            new QName("inOnly"), new InOnlyService(), _domain, null);
         assertNotNull(_provider.createDispatcher(inOnly));
 
         // verify that dispatchers can be created for an InOut service
         ServiceReference inOut = new ServiceReferenceImpl(
-            new QName("inOut"), new InOutService(), _domain);
+            new QName("inOut"), new InOutService(), _domain, null);
         assertNotNull(_provider.createDispatcher(inOut));
     }
 
     @Test
     public void testGetDispatcher() throws Exception {
         ServiceReference ref = new ServiceReferenceImpl(
-            new QName("testGetDispatcher"), new InOnlyService(), null);
+            new QName("testGetDispatcher"), new InOnlyService(), null, null);
         Dispatcher dispatch = _provider.createDispatcher(ref);
 
         assertEquals(dispatch, _provider.getDispatcher(ref));
@@ -230,7 +230,8 @@ public class CamelExchangeBusTest {
     }
 
     private ServiceReference registerInOutService(String name, ExchangeHandler handler) {
-        ServiceReferenceImpl reference = new ServiceReferenceImpl(new QName(name), new InOutService(), _domain);
+        ServiceReferenceImpl reference = new ServiceReferenceImpl(
+                new QName(name), new InOutService(), _domain, null);
         _domain.registerService(new QName(name), new InOutService(), handler);
         reference.setDispatcher(_provider.createDispatcher(reference));
         return reference;
