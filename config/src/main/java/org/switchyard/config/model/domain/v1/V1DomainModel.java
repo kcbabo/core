@@ -36,8 +36,8 @@ public class V1DomainModel extends BaseNamedModel implements DomainModel {
     /**
      * Constructs a new V1DomainModel.
      */
-    public V1DomainModel() {
-        super(new QName(SwitchYardModel.DEFAULT_NAMESPACE, DomainModel.DOMAIN));
+    public V1DomainModel(String namespace) {
+        super(new QName(namespace, DomainModel.DOMAIN));
         setModelChildrenOrder(TransformsModel.TRANSFORMS, ValidatesModel.VALIDATES, PropertiesModel.PROPERTIES, SecuritiesModel.SECURITIES);
     }
 

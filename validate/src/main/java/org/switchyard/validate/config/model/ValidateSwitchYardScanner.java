@@ -39,13 +39,15 @@ import org.switchyard.validate.internal.ValidatorUtil;
  * @author <a href="mailto:tm.igarashi@gmail.com">Tomohisa Igarashi</a>
  */
 public class ValidateSwitchYardScanner implements Scanner<SwitchYardModel> {
+    
+    private String _namespace;
 
     /**
      * {@inheritDoc}
      */
     @Override
     public ScannerOutput<SwitchYardModel> scan(ScannerInput<SwitchYardModel> input) throws IOException {
-        SwitchYardModel switchyardModel = new V1SwitchYardModel();
+        SwitchYardModel switchyardModel = new V1SwitchYardModel(_namespace);
         ValidatesModel validatesModel = null;
 
         List<Class<?>> validatorClasses = scanForValidators(input.getURLs());
@@ -64,7 +66,7 @@ public class ValidateSwitchYardScanner implements Scanner<SwitchYardModel> {
                 validateModel.setName(supportedValidate.getName());
 
                 if (validatesModel == null) {
-                    validatesModel = new V1ValidatesModel();
+                    validatesModel = new V1ValidatesModel(_namespace);
                     switchyardModel.setValidates(validatesModel);
                 }
                 validatesModel.addValidate(validateModel);
@@ -72,6 +74,10 @@ public class ValidateSwitchYardScanner implements Scanner<SwitchYardModel> {
         }
 
         return new ScannerOutput<SwitchYardModel>().setModel(switchyardModel);
+    }
+    
+    public void setNamespace(String namespace) {
+        _namespace = namespace;
     }
 
     private List<Class<?>> scanForValidators(List<URL> urls) throws IOException {

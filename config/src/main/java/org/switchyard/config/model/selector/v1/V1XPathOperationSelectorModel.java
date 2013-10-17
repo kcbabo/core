@@ -29,8 +29,8 @@ public class V1XPathOperationSelectorModel extends BaseModel implements XPathOpe
     /**
      * Constructor.
      */
-    public V1XPathOperationSelectorModel() {
-        super(new QName(SwitchYardModel.DEFAULT_NAMESPACE, OPERATION_SELECTOR + '.' + XPATH));
+    public V1XPathOperationSelectorModel(String namespace) {
+        super(new QName(namespace, OPERATION_SELECTOR + '.' + XPATH));
     }
 
     /**

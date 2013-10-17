@@ -14,6 +14,7 @@
 package org.switchyard.config.model;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,18 +27,18 @@ import java.util.List;
  */
 public class MergeScanner<M extends Model> implements Scanner<M> {
 
-    private final Class<M> _clazz;
+    private M _model;
     private final boolean _fromOverridesTo;
     private final List<Scanner<M>> _scanners;
 
     /**
      * Constructs a new MergeScanner using the specified parameters.
-     * @param clazz the type of Model that will be scanned for and merged
+     * @param model instance of the model to be merged into
      * @param fromOverridesTo whether or not each successfully merged Model's values will override the next Model to merge values
      * @param scanners the Scanners to merge output from
      */
-    public MergeScanner(Class<M> clazz, boolean fromOverridesTo, Scanner<M>... scanners) {
-        _clazz = clazz;
+    public MergeScanner(M model, boolean fromOverridesTo, Scanner<M>... scanners) {
+        _model = model;
         _fromOverridesTo = fromOverridesTo;
         List<Scanner<M>> list = new ArrayList<Scanner<M>>();
         if (scanners != null) {
@@ -52,12 +53,12 @@ public class MergeScanner<M extends Model> implements Scanner<M> {
 
     /**
      * Constructs a new MergeScanner using the specified parameters.
-     * @param clazz the type of Model that will be scanned for and merged
+     * @param model instance of the model to be merged into
      * @param fromOverridesTo whether or not each successfully merged Model's values will override the next Model to merge values
      * @param scanners the Scanners to merge output from
      */
-    public MergeScanner(Class<M> clazz, boolean fromOverridesTo, List<Scanner<M>> scanners) {
-        _clazz = clazz;
+    public MergeScanner(M model, boolean fromOverridesTo, List<Scanner<M>> scanners) {
+        _model = model;
         _fromOverridesTo = fromOverridesTo;
         _scanners = new ArrayList<Scanner<M>>();
         if (scanners != null) {
@@ -74,26 +75,29 @@ public class MergeScanner<M extends Model> implements Scanner<M> {
      */
     @Override
     public ScannerOutput<M> scan(ScannerInput<M> input) throws IOException {
-        M merged;
-        try {
-            merged = _clazz.newInstance();
-        } catch (Exception e) {
-            throw new IOException(e);
-        }
+        
         for (Scanner<M> scanner : _scanners) {
+            try {
+                Method setNamespace = scanner.getClass().getMethod("setNamespace", String.class);
+                if (setNamespace != null) {
+                    setNamespace.invoke(scanner, _model.getModelConfiguration().getQName().getNamespaceURI());
+                }
+            } catch (Exception ex) {
+                System.err.println("Failed to set namespace on scanner: " + ex);
+            }
             ScannerOutput<M> scannerOutput = scanner.scan(input);
             if (scannerOutput != null) {
                 List<M> scanned_list = scannerOutput.getModels();
                 if (scanned_list != null) {
                     for (M scanned : scanned_list) {
                         if (scanned != null) {
-                            merged = Models.merge(scanned, merged, _fromOverridesTo);
+                            _model = Models.merge(scanned, _model, _fromOverridesTo);
                         }
                     }
                 }
             }
         }
-        return new ScannerOutput<M>().setModel(merged);
+        return new ScannerOutput<M>().setModel(_model);
     }
 
 }

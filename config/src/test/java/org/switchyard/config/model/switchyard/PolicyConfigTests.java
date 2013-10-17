@@ -36,6 +36,8 @@ public class PolicyConfigTests {
 	private static final String POLICY_FOO = "foo";
 	private static final String POLICY_BAR = "bar";
 	
+	private static final String SY_NS_URI = "urn:switchyard-config:switchyard:1.0";
+	
     private static final String POLICY_XML = 
     		"/org/switchyard/config/model/composite/PolicyTests.xml";
     
@@ -69,7 +71,7 @@ public class PolicyConfigTests {
 	@Test
 	public void buildPolicyConfig() throws Exception {
 		// Test service policy
-		ComponentServiceModel svc = new V1ComponentServiceModel();
+		ComponentServiceModel svc = new V1ComponentServiceModel(SY_NS_URI);
 		svc.addPolicyRequirement(POLICY_FOO);
 		svc.addPolicyRequirement(POLICY_BAR);
 		Set<String> svcRequires = svc.getPolicyRequirements();
@@ -77,7 +79,7 @@ public class PolicyConfigTests {
 		Assert.assertTrue(svcRequires.contains(POLICY_BAR));
 		
 		// Test reference policy
-		ComponentReferenceModel ref = new V1ComponentReferenceModel();
+		ComponentReferenceModel ref = new V1ComponentReferenceModel(SY_NS_URI);
 		ref.addPolicyRequirement(POLICY_BAR);
 		Set<String> refRequires = ref.getPolicyRequirements();
 		Assert.assertTrue(refRequires.contains(POLICY_BAR));

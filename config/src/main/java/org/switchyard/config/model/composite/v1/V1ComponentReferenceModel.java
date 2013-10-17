@@ -34,12 +34,14 @@ import org.switchyard.config.model.composite.InterfaceModel;
 public class V1ComponentReferenceModel extends BaseNamedModel implements ComponentReferenceModel {
 
     private InterfaceModel _interface;
+    private String _extensionNamespace;
 
     /**
      * Constructs a new V1ComponentReferenceModel.
      */
-    public V1ComponentReferenceModel() {
+    public V1ComponentReferenceModel(String extensionNamespace) {
         super(new QName(CompositeModel.DEFAULT_NAMESPACE, ComponentReferenceModel.REFERENCE));
+        _extensionNamespace = extensionNamespace;
     }
 
     /**
@@ -49,6 +51,7 @@ public class V1ComponentReferenceModel extends BaseNamedModel implements Compone
      */
     public V1ComponentReferenceModel(Configuration config, Descriptor desc) {
         super(config, desc);
+        _extensionNamespace = getRootConfiguration().getQName().getNamespaceURI();
     }
 
     /**
@@ -102,7 +105,8 @@ public class V1ComponentReferenceModel extends BaseNamedModel implements Compone
      */
     @Override
     public String getSecurity() {
-        return getModelAttribute(ComponentReferenceModel.SECURITY);
+        return getModelAttribute(
+                new QName(_extensionNamespace, ComponentReferenceModel.SECURITY));
     }
 
     /**
@@ -110,7 +114,9 @@ public class V1ComponentReferenceModel extends BaseNamedModel implements Compone
      */
     @Override
     public ComponentReferenceModel setSecurity(String security) {
-        setModelAttribute(ComponentReferenceModel.SECURITY, security);
+        setModelAttribute(
+                new QName(_extensionNamespace, ComponentReferenceModel.SECURITY),
+                security);
         return this;
     }
 

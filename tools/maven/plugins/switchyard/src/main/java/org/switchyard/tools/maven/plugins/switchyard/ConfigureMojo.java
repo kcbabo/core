@@ -134,11 +134,13 @@ public class ConfigureMojo<M extends Model> extends AbstractMojo {
                 }
             }
             addModelPullerScanners(scanners);
-            if (_modelClassName == null) {
-                _modelClassName = V1SwitchYardModel.class.getName();
-            }
-            @SuppressWarnings("unchecked")
-            Class<M> modelClass = (Class<M>)Classes.forName(_modelClassName, loader);
+            
+            /*** TODO - code should be added here which:
+             *   a) loads switchyard.xml
+             *   b) gets the namespace in use
+             *   c) creates a new instance of V1SwitchYardModel with the correct namespace
+             */
+            
             MergeScanner<M> merge_scanner = new MergeScanner<M>(modelClass, true, scanners);
             List<URL> scannerURLs = new ArrayList<URL>();
             if (_scanDirectories.length == 0) {

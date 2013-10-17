@@ -26,12 +26,12 @@ import org.switchyard.config.model.validate.ValidatesModel;
  */
 public interface SwitchYardModel extends NamedModel {
 
-    /** The default switchyard namespace. */
-    public static final String DEFAULT_NAMESPACE = "urn:switchyard-config:switchyard:1.0";
-
     /** The "switchyard" name. */
     public static final String SWITCHYARD = "switchyard";
-
+    
+    public static final String NAMESPACE_1_0 = "urn:switchyard-config:switchyard:1.0";
+    public static final String NAMESPACE_1_1 = "urn:switchyard-config:switchyard:1.1";
+    
     /**
      * Gets the child composite model.
      * @return the child composite model

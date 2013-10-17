@@ -907,7 +907,8 @@ public class SwitchYardTestKit {
             ClassLoader classLoader = _testInstance.getClass().getClassLoader();
 
             if (scanners != null && !scanners.isEmpty() && classLoader instanceof URLClassLoader) {
-                MergeScanner<V1SwitchYardModel> merge_scanner = new MergeScanner<V1SwitchYardModel>(V1SwitchYardModel.class, true, scanners);
+                MergeScanner<V1SwitchYardModel> merge_scanner = new MergeScanner<V1SwitchYardModel>(
+                        new V1SwitchYardModel(model.getQName().getNamespaceURI()), true, scanners);
                 List<URL> scanURLs = getScanURLs((URLClassLoader)classLoader);
 
                 ScannerInput<V1SwitchYardModel> scanner_input = new ScannerInput<V1SwitchYardModel>().setName(model.getName()).setURLs(scanURLs);

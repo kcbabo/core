@@ -162,7 +162,7 @@ public class ConfigurationTests {
     public void testNamespacesMerge() throws Exception {
         @SuppressWarnings("unchecked")
         Scanner<TestModel>[] scanners = new Scanner[] {new ModelPullerScanner<Model>(NAMESPACES_XML, getClass().getClassLoader())};
-        MergeScanner<TestModel> merge_scanner = new MergeScanner<TestModel>(TestModel.class, true, scanners);
+        MergeScanner<TestModel> merge_scanner = new MergeScanner<TestModel>(new TestModel(), true, scanners);
         Model model = merge_scanner.scan(null).getModel();
 
         Configuration config_one = model.getModelConfiguration();

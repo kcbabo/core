@@ -66,8 +66,8 @@ public class ValidateModelTests {
 
     @Test
     public void testCreate() throws Exception {
-        SwitchYardModel switchyard = new V1SwitchYardModel();
-        ValidatesModel validates = new V1ValidatesModel();
+        SwitchYardModel switchyard = new V1SwitchYardModel("urn:switchyard-config:switchyard:1.0");
+        ValidatesModel validates = new V1ValidatesModel("urn:switchyard-config:switchyard:1.0");
         JavaValidateModel javaValidate = new V1JavaValidateModel();
         javaValidate.setName(new QName("msgA"));
         javaValidate.setClazz("org.examples.validate.AValidate");

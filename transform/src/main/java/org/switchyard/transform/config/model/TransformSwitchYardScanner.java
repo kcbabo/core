@@ -39,13 +39,15 @@ import org.switchyard.transform.internal.TransformerUtil;
  * @author <a href="mailto:tom.fennelly@gmail.com">tom.fennelly@gmail.com</a>
  */
 public class TransformSwitchYardScanner implements Scanner<SwitchYardModel> {
+    
+    private String _namespace;
 
     /**
      * {@inheritDoc}
      */
     @Override
     public ScannerOutput<SwitchYardModel> scan(ScannerInput<SwitchYardModel> input) throws IOException {
-        SwitchYardModel switchyardModel = new V1SwitchYardModel();
+        SwitchYardModel switchyardModel = new V1SwitchYardModel(_namespace);
         TransformsModel transformsModel = null;
 
         List<Class<?>> transformerClasses = scanForTransformers(input.getURLs());
@@ -65,7 +67,7 @@ public class TransformSwitchYardScanner implements Scanner<SwitchYardModel> {
                 transformModel.setTo(supportedTransform.getTo());
 
                 if (transformsModel == null) {
-                    transformsModel = new V1TransformsModel();
+                    transformsModel = new V1TransformsModel(_namespace);
                     switchyardModel.setTransforms(transformsModel);
                 }
                 transformsModel.addTransform(transformModel);
@@ -73,6 +75,10 @@ public class TransformSwitchYardScanner implements Scanner<SwitchYardModel> {
         }
 
         return new ScannerOutput<SwitchYardModel>().setModel(switchyardModel);
+    }
+    
+    public void setNamespaceURI(String namespace) {
+        _namespace = namespace;
     }
 
     private List<Class<?>> scanForTransformers(List<URL> urls) throws IOException {

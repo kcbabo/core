@@ -38,8 +38,8 @@ public class V1TransformsModel extends BaseModel implements TransformsModel {
     /**
      * Constructs a new V1TransformsModel.
      */
-    public V1TransformsModel() {
-        super(new QName(SwitchYardModel.DEFAULT_NAMESPACE, TransformsModel.TRANSFORMS));
+    public V1TransformsModel(String namespace) {
+        super(new QName(namespace, TransformsModel.TRANSFORMS));
         setModelChildrenOrder(TransformModel.TRANSFORM);
     }
 

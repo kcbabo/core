@@ -43,8 +43,8 @@ public class V1SwitchYardModel extends BaseNamedModel implements SwitchYardModel
     /**
      * Constructs a new V1SwitchYardModel.
      */
-    public V1SwitchYardModel() {
-        super(new QName(SwitchYardModel.DEFAULT_NAMESPACE, SwitchYardModel.SWITCHYARD));
+    public V1SwitchYardModel(String namespace) {
+        super(new QName(namespace, SwitchYardModel.SWITCHYARD));
         setModelChildrenOrder(CompositeModel.COMPOSITE, TransformsModel.TRANSFORMS, ValidatesModel.VALIDATES, DomainModel.DOMAIN, ArtifactsModel.ARTIFACTS);
         setDomainPropertyResolver();
     }

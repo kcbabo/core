@@ -64,8 +64,8 @@ public class TransformModelTests {
 
     @Test
     public void testCreate() throws Exception {
-        SwitchYardModel switchyard = new V1SwitchYardModel();
-        TransformsModel transforms = new V1TransformsModel();
+        SwitchYardModel switchyard = new V1SwitchYardModel("urn:switchyard-config:switchyard:1.0");
+        TransformsModel transforms = new V1TransformsModel("urn:switchyard-config:switchyard:1.0");
         JavaTransformModel javaTransform = new V1JavaTransformModel();
         javaTransform.setFrom(new QName("msgA"));
         javaTransform.setTo(new QName("msgB"));

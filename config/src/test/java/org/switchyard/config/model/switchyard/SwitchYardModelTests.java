@@ -70,7 +70,7 @@ public class SwitchYardModelTests {
 
     @Test
     public void testCreateEmptyModel() throws Exception {
-        String namespace = SwitchYardModel.DEFAULT_NAMESPACE;
+        String namespace = SwitchYardModel.NAMESPACE_1_1;
         String name = SwitchYardModel.SWITCHYARD;
         Model model = new ModelPuller<Model>().pull(XMLHelper.createQName(namespace, name));
         Assert.assertTrue(model instanceof SwitchYardModel);
@@ -163,8 +163,8 @@ public class SwitchYardModelTests {
 
     @Test
     public void testArtifactCreate() throws Exception {
-        ArtifactsModel artifacts = new V1ArtifactsModel();
-        ArtifactModel artifact = new V1ArtifactModel();
+        ArtifactsModel artifacts = new V1ArtifactsModel(SwitchYardModel.NAMESPACE_1_0);
+        ArtifactModel artifact = new V1ArtifactModel(SwitchYardModel.NAMESPACE_1_0);
         artifact.setName("foo");
         artifact.setURL("file://tmp/foo");
         artifacts.addArtifact(artifact);
@@ -172,7 +172,7 @@ public class SwitchYardModelTests {
         Assert.assertEquals("foo", artifact.getName());
         Assert.assertEquals("file://tmp/foo", artifact.getURL());
         
-        SwitchYardModel syModel = new V1SwitchYardModel();
+        SwitchYardModel syModel = new V1SwitchYardModel(SwitchYardModel.NAMESPACE_1_0);
         syModel.setArtifacts(artifacts);
         Assert.assertEquals(artifacts, syModel.getArtifacts());
     }

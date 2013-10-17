@@ -348,6 +348,15 @@ public abstract class BaseModel implements Model {
         }
         return this;
     }
+    
+    protected Configuration getRootConfiguration() {
+        Configuration root = _config;
+        while (root.getParent() != null) {
+            root = root.getParent();
+        }
+        
+        return root;
+    }
 
     /**
      * {@inheritDoc}

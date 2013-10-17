@@ -29,8 +29,8 @@ public class V1StaticOperationSelectorModel extends BaseModel implements StaticO
     /**
      * Constructor.
      */
-    public V1StaticOperationSelectorModel() {
-        super(new QName(SwitchYardModel.DEFAULT_NAMESPACE, OPERATION_SELECTOR));
+    public V1StaticOperationSelectorModel(String namespace) {
+        super(new QName(namespace, OPERATION_SELECTOR));
     }
     
     /**
