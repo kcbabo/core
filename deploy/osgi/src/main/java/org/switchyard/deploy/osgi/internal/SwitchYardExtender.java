@@ -13,6 +13,12 @@
  */
 package org.switchyard.deploy.osgi.internal;
 
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,15 +31,10 @@ import org.switchyard.deploy.ServiceDomainManager;
 import org.switchyard.deploy.osgi.ComponentRegistry;
 import org.switchyard.deploy.osgi.NamespaceHandlerRegistry;
 import org.switchyard.deploy.osgi.SwitchYardListener;
+import org.switchyard.deploy.osgi.TransformSource;
 import org.switchyard.deploy.osgi.base.AbstractExtender;
 import org.switchyard.deploy.osgi.base.CompoundExtension;
 import org.switchyard.deploy.osgi.base.Extension;
-
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * SwitchYardExtender.
@@ -41,7 +42,7 @@ import java.util.concurrent.Executors;
 public class SwitchYardExtender extends AbstractExtender {
 
     public static final String SWITCHYARD_XML = "META-INF/switchyard.xml";
-
+    
     private final Logger _logger = LoggerFactory.getLogger(SwitchYardExtender.class);
 
     private NamespaceHandlerRegistry _namespaceHandlerRegistry;
@@ -123,6 +124,11 @@ public class SwitchYardExtender extends AbstractExtender {
         URL swXml = bundle.getEntry(SWITCHYARD_XML);
         if (swXml != null) {
             extensions.add(new SwitchYardContainerImpl(this, bundle, getExecutors()));
+        }
+        URL tfXml = bundle.getEntry(TransformSource.TRANSFORMS_XML);
+        if (tfXml != null) {
+            TransformSource trs = new TransformSourceImpl(bundle);
+            bundle.getBundleContext().registerService(TransformSource.class, trs, null);
         }
         return extensions.isEmpty() ? null : new CompoundExtension(bundle, extensions);
     }

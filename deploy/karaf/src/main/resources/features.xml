@@ -280,12 +280,11 @@
         <bundle>mvn:org.switchyard.quickstarts/switchyard-remote-invoker/${project.version}</bundle>
     </feature>
 
-    <!-- Requires SOAP binding -->
-    <!--feature name="switchyard-quickstart-camel-soap-proxy" version="${project.version}" resolver="(obr)">
+    <feature name="switchyard-quickstart-camel-soap-proxy" version="${project.version}" resolver="(obr)">
         <feature version="${project.version}">switchyard-camel</feature>
         <feature version="${project.version}">switchyard-soap</feature>
         <bundle>mvn:org.switchyard.quickstarts/switchyard-camel-soap-proxy/${project.version}</bundle>
-    </feature-->
+    </feature>
 
     <!-- Works -->
     <feature name="switchyard-quickstart-camel-sql-binding" version="${project.version}" resolver="(obr)">
