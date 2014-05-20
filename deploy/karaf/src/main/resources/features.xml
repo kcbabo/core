@@ -265,7 +265,7 @@
 
     <feature name="switchyard-quickstart-camel-jaxb" version="${project.version}" resolver="(obr)">
         <feature version="${project.version}">switchyard-camel</feature>
-        <feature version="${project.version}">switchyard-http</feature>
+        <feature version="${project.version}">switchyard-soap</feature>
         <feature version="${version.org.apache.camel}">camel-jaxb</feature>
         <bundle>mvn:org.switchyard.quickstarts/switchyard-camel-jaxb/${project.version}</bundle>
     </feature>
@@ -323,12 +323,15 @@
     </feature>
 
     <!-- Requires SCA binding -->
-    <!--feature name="switchyard-quickstart-camel-service" version="${project.version}" resolver="(obr)">
+    <feature name="switchyard-quickstart-camel-service" version="${project.version}" resolver="(obr)">
         <feature version="${project.version}">switchyard-camel</feature>
+        <feature version="${project.version}">switchyard-soap</feature>
         <feature version="${version.org.apache.camel}">camel-script</feature>
         <feature version="${version.org.apache.camel}">camel-script-javascript</feature>
+        <feature version="${version.org.apache.camel}">camel-ognl</feature>
+        <feature version="${version.org.apache.camel}">camel-mvel</feature>
         <bundle>mvn:org.switchyard.quickstarts/switchyard-camel-service/${project.version}</bundle>
-    </feature-->
+    </feature>
     
     <feature name="switchyard-quickstart-remote-invoker" version="${project.version}" resolver="(obr)">
         <feature version="${project.version}">switchyard-bean</feature>
@@ -338,11 +341,11 @@
     </feature>
 
     <!-- Requires SOAP binding -->
-    <!--feature name="switchyard-quickstart-camel-soap-proxy" version="${project.version}" resolver="(obr)">
+    <feature name="switchyard-quickstart-camel-soap-proxy" version="${project.version}" resolver="(obr)">
         <feature version="${project.version}">switchyard-camel</feature>
         <feature version="${project.version}">switchyard-soap</feature>
         <bundle>mvn:org.switchyard.quickstarts/switchyard-camel-soap-proxy/${project.version}</bundle>
-    </feature-->
+    </feature>
 
     <!-- Works -->
     <feature name="switchyard-quickstart-camel-sql-binding" version="${project.version}" resolver="(obr)">
