@@ -173,10 +173,13 @@ public final class ResourceType implements Comparable<ResourceType> {
      * necessary if new ClassLoaders become available.
      * @param loader a ClassLoader to try
      */
-    public static synchronized void install(ClassLoader loader) {
+    public static synchronized void install(ClassLoader loader, String ... additionalUrls) {
         List<URL> urls;
         try {
             urls = Classes.getResources("/org/switchyard/common/io/resource/resourceType.properties", loader);
+            for (String url : additionalUrls) {
+                urls.addAll(Classes.getResources(url, loader));
+            }
         } catch (Throwable t) {
             LOGGER.fatal(t.getMessage());
             urls = Collections.emptyList();
